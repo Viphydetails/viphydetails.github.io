@@ -13,7 +13,7 @@ Web de catálogo, carrito y pago, con pedido por WhatsApp y tasa euro del BCV qu
 
 ## Datos que debes cambiar en `index.html` (arriba, bloque CONFIGURACIÓN)
 - `whatsapp`: número con código de país, sin + ni espacios.
-- `pagos`: datos de cobro de bolívares, Binance y el tercer método.
+- `pagos`: datos de cobro (bolívares, Binance, Zinli, Zelle y PayPal).
 - Los productos ya no se editan aquí: se cargan desde el panel de admin (ver abajo).
 
 ## Panel de administración (productos y fotos)
@@ -26,8 +26,9 @@ Web de catálogo, carrito y pago, con pedido por WhatsApp y tasa euro del BCV qu
 - **Ofertas:** en el producto escribe el «Precio en oferta». La tienda muestra «Antes» con el precio tachado, «Hoy» con el de oferta y la etiqueta OFERTA, y cobra el precio en oferta. Para quitarla, deja el campo vacío.
 - **Secciones:** en la pestaña «Secciones» del panel se crean, renombran, ordenan (↑ ↓) y borran. Una sección con productos no se puede borrar hasta mover o borrar sus productos. Las secciones vacías no aparecen en la tienda.
 - **Ofertas:** en el editor del producto marca «🏷️ Etiquetar como oferta» y escribe el precio en oferta. El producto sale con la etiqueta OFERTA y en la sección Ofertas de la tienda; el editor te avisa el % de descuento. Para quitar la oferta, desmarca la casilla y guarda.
+- **Pedidos:** cada pedido enviado desde la tienda queda guardado con un número (N° 1, 2, 3…) y el mensaje de WhatsApp empieza con «Hola, mi nombre es… Mi pedido es el pedido N° …». En la pestaña «Pedidos» del panel ves el historial, los totales del mes y cambias el estado de cada pedido (Pendiente, En espera, Por hacer, En proceso, Listo para entregar, Entregado, Cancelado). El teléfono del cliente abre su chat de WhatsApp.
 - **Varias fotos:** cada producto admite hasta 8. La primera es la principal; en la tienda se deslizan en carrusel y al tocarlas se ven en grande.
-- `supabase/esquema.sql`, `02-ofertas-y-galeria.sql` y `03-secciones.sql` (en ese orden) crean toda la base de datos. Ya se ejecutaron; solo hace falta de nuevo si creas otro proyecto.
+- `supabase/esquema.sql`, `02-ofertas-y-galeria.sql`, `03-secciones.sql` y `04-pedidos.sql` (en ese orden) crean toda la base de datos. Ya se ejecutaron; solo hace falta de nuevo si creas otro proyecto.
 - Si Supabase no responde, la tienda muestra la última lista de productos que vio el visitante, o la lista de respaldo de `index.html`.
 
 ## Si la tasa falla

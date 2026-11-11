@@ -218,7 +218,7 @@ a.btn{text-align:center}
 /* ===== CONFIGURACIÓN: edita aquí ===== */
 const CONFIG = {
   tienda: "Viphy Details",
-  resena: "Viphy Details nace en noviembre del año 2021, en una situación poco alentadora en medio de una pandemia.\n\nSin embargo, nace de la necesidad de superación, salir adelante, emprender y sacar una sonrisa a quienes desde entonces han confiado en nosotros y continúan acompañándonos en este camino, y a quienes lo han hecho posible.\n\nPor eso trajimos este sitio para que realices tu pedido con nosotros. Encargar nunca ha sido tan fácil, estamos a un solo clic de tu sorpresa especial.",
+  resena: "Viphy Details nace en noviembre del año 2020, en una situación poco alentadora en medio de una pandemia.\n\nSin embargo, nace de la necesidad de superación, salir adelante, emprender y sacar una sonrisa a quienes desde entonces han confiado en nosotros y continúan acompañándonos en este camino, y a quienes lo han hecho posible.\n\nPor eso trajimos este sitio para que realices tu pedido con nosotros. Encargar nunca ha sido tan fácil, estamos a un solo clic de tu sorpresa especial.",
   fotoPortada: "",             // ruta de la foto general, ej. "imagenes/portada.jpg"
   direccion: "Prebo, Valencia, Carabobo",
   instagram: "@Viphy_details",
@@ -229,7 +229,9 @@ const CONFIG = {
   pagos: {
     bs: {nombre:"Bolívares", datos:"Pago móvil\nBanco: Bancamiga\nCédula: 30.127.286\nTeléfono: 0424-4093249"},
     binance: {nombre:"Binance", datos:"Binance\nID: 419931137"},
-    zinli: {nombre:"Zinli", datos:"Zinli\nCorreo: sophiaifloresg@gmail.com"}
+    zinli: {nombre:"Zinli", datos:"Zinli\nCorreo: sophiaifloresg@gmail.com"},
+    zelle: {nombre:"Zelle", datos:"Zelle\nCorreo: nelsonrodriguez01@gmail.com"},
+    paypal: {nombre:"PayPal (consultar datos)", datos:"PayPal\nEscríbenos por WhatsApp y te pasamos los datos para el pago.", sinReferencia:true}
   }
 };
 // Las secciones (CATS) y los datos de Supabase están en compartido.js
@@ -257,7 +259,7 @@ let PRODUCTOS = [
 const FAQ = [
   ["¿Cómo hago mi pedido?","Selecciona el producto que más te guste, completa el formulario y nos llegará todo a nuestro WhatsApp. Si tienes dudas, también puedes consultarnos y te atenderemos apenas veamos tu mensaje."],
   ["¿Por qué debo abonar el 50 %?","La mayoría de nuestros productos (por no decir todos) son personalizados, así que para evitar inconvenientes siempre preferimos trabajar con el 50 % adelantado.<br><br><strong>Es importante que sepas que, una vez abonado, NO HACEMOS DEVOLUCIONES POR NINGÚN MOTIVO.</strong> Debes tener 100 % de seguridad al encargar."],
-  ["¿Qué métodos de pago aceptan?","El que se te haga más fácil: aceptamos bolívares, divisas en efectivo, Binance y Zinli."],
+  ["¿Qué métodos de pago aceptan?","El que se te haga más fácil: aceptamos bolívares, divisas en efectivo, Binance, Zinli, Zelle y PayPal."],
   ["¿Hacen delivery?","Hacemos delivery a toda Valencia (con costo adicional dependiendo de la zona) y trabajamos con envíos nacionales."],
   ["¿Cuánto tarda un pedido personalizado?","Depende mucho de la complejidad y del producto. Usualmente el mínimo son 2 días de antelación."]
 ];
@@ -391,38 +393,55 @@ function payView(){
   ${f.metodo==="bs" && !CONFIG.tasa ? `<p class="notice">La tasa del día no está disponible ahora. Escríbenos por WhatsApp para confirmar el monto en bolívares.</p>` : ""}
   ${f.metodo==="bs" && CONFIG.tasa ? `<div class="line total"><span>Monto en bolívares <span class="bs">(tasa euro ${tasaTxt()} · ${CONFIG.tasaFecha})</span></span><span>${bs(aPagar())}</span></div>` : ""}
   <div class="notice"><pre style="margin:0 0 10px;font:inherit;white-space:pre-wrap">${esc(CONFIG.pagos[f.metodo].datos)}</pre><button class="btn ghost" data-copiar="1">Copiar datos y monto</button></div>
-  <label for="ref">Número de referencia o comprobante del pago</label><input type="text" id="ref" data-f="ref" value="${esc(f.ref)}">
+  <label for="ref">Número de referencia o comprobante del pago${CONFIG.pagos[f.metodo].sinReferencia ? " (opcional: te pasamos los datos por WhatsApp)" : ""}</label><input type="text" id="ref" data-f="ref" value="${esc(f.ref)}">
   <label for="nota">Personalización: nombres, frases, colores (las fotos las envías por WhatsApp)</label><textarea id="nota" data-f="nota" rows="2">${esc(f.nota)}</textarea></div>
   <p class="err" id="err" role="alert"></p>
   <div class="row"><button class="btn ghost" data-go="cart">Volver al carrito</button><button class="btn" id="send">Enviar pedido por WhatsApp</button></div>`;
 }
 
-function mensaje(){
-  const L = [`*Nuevo pedido · ${CONFIG.tienda}*`, "", `Cliente: ${f.nombre}`, `Teléfono: ${f.tel}`, "", "*Productos*"];
+function mensaje(numero){
+  const L = [`Hola, mi nombre es ${f.nombre.trim()}.`, numero ? `Mi pedido es el *pedido N° ${numero}*.` : "Quiero hacer este pedido:", "",
+    `*Pedido${numero ? " N° " + numero : ""} · ${CONFIG.tienda}*`, `Teléfono: ${f.tel}`, "", "*Productos*"];
   items().forEach(i => L.push(`• ${i.q} × ${i.n} — ${usd(i.p*i.q)}`));
   L.push("", `*Total:* ${usd(total())} (${bs(total())})`,
     `*Entrega:* ${f.entrega==="delivery" ? "Delivery — " + f.dir : "Pick-up"}`,
     `*Fecha y hora:* ${f.fecha} ${f.hora}`,
     `*Pago:* ${MET[f.metodo]} · ${f.modo==="mitad" ? "Abono del 50 %" : "De contado"}`,
     `*Monto abonado:* ${usd(aPagar())}${f.metodo==="bs" && CONFIG.tasa ? " (" + bs(aPagar()) + " a tasa euro " + tasaTxt() + ")" : ""}`,
-    `*Referencia:* ${f.ref}`);
+    `*Referencia:* ${f.ref.trim() || "por enviar"}`);
   if (f.nota) L.push(`*Notas:* ${f.nota}`);
   return L.join("\n");
 }
 
-function enviar(){
+let numPedido = null;
+async function enviar(){
   const e = $("#err");
   const falta = !f.nombre.trim() ? "Escribe tu nombre." : !f.tel.trim() ? "Escribe tu teléfono." :
     (f.entrega==="delivery" && !f.dir.trim()) ? "Escribe la dirección de entrega." : !f.fecha ? "Elige la fecha de entrega." :
-    !f.hora ? "Elige la hora de entrega." : !f.ref.trim() ? "Escribe la referencia del pago para procesar el pedido." : "";
+    !f.hora ? "Elige la hora de entrega." : (!f.ref.trim() && !CONFIG.pagos[f.metodo].sinReferencia) ? "Escribe la referencia del pago para procesar el pedido." : "";
   if (falta){ e.textContent = falta; return; }
-  last = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(mensaje());
-  window.open(last, "_blank");
+  const b = $("#send"); b.disabled = true; b.textContent = "Registrando tu pedido…"; e.textContent = "";
+  // Se abre la pestaña antes de esperar a Supabase para que el navegador no la bloquee.
+  let w = null; try { w = window.open("", "_blank"); } catch (err) {}
+  numPedido = await registrarPedido();
+  last = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(mensaje(numPedido));
+  if (w && !w.closed) w.location.href = last; else window.open(last, "_blank");
   view = "done"; animar = true; render(); window.scrollTo(0, 0);
+}
+// Guarda el pedido en Supabase y devuelve su número. Si falla, el pedido igual se envía por WhatsApp, sin número.
+async function registrarPedido(){
+  try{
+    const r = await fetch(SUPABASE.url + "/rest/v1/rpc/crear_pedido", {method:"POST", headers:{apikey: SUPABASE.key, "Content-Type":"application/json"},
+      body: JSON.stringify({p:{cliente:f.nombre, telefono:f.tel, entrega:f.entrega, direccion: f.entrega === "delivery" ? f.dir : "", fecha:f.fecha, hora:f.hora,
+        metodo: MET[f.metodo], modo:f.modo, tasa: f.metodo === "bs" && CONFIG.tasa ? CONFIG.tasa : null, referencia:f.ref, nota:f.nota,
+        items: items().map(i => ({id:i.id, q:i.q}))}})});
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+  }catch(err){ console.warn("No se pudo registrar el pedido:", err.message); return null; }
 }
 
 function done(){
-  return `<div class="empty"><h1>Pedido listo para enviar</h1><p>Se abrió WhatsApp con el detalle de tu pedido. Presiona enviar en el chat para que lo procesemos. Si no se abrió, usa este botón.</p>
+  return `<div class="empty"><h1>Pedido listo para enviar</h1>${numPedido ? `<p class="kick" style="margin:6px 0 4px">Tu número de pedido</p><p class="price" style="font-size:2.4rem;margin:0 0 10px">N° ${numPedido}</p>` : ""}<p>Se abrió WhatsApp con el detalle de tu pedido. Presiona enviar en el chat para que lo procesemos. Si no se abrió, usa este botón.</p>
   <a class="btn" href="${last}" target="_blank" rel="noopener">Abrir WhatsApp</a>
   <p><button class="btn ghost" id="nuevo">Hacer otro pedido</button></p></div>`;
 }

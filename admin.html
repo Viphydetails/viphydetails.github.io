@@ -71,7 +71,23 @@ dialog::backdrop{background:rgba(43,0,6,.55)}
 .pie{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:20px}
 .pie div{display:flex;gap:8px;flex-wrap:wrap}
 .oculta{display:none}
-.pestanas{display:flex;gap:6px;margin:0 0 16px;border-bottom:1px solid var(--line)}
+.resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:0 0 14px}
+.resumen div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.resumen b{display:block;font-size:1.5rem;line-height:1.1;color:var(--accent)}
+.resumen span{font-size:.8rem;color:var(--muted)}
+.ped{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--c,var(--line));border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.ped-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ped-top h3{margin:0;font-size:1.1rem}
+.ped-top select{width:auto;padding:6px 10px;font-weight:700;border-color:var(--c,var(--line))}
+.ped ul{margin:0;padding-left:18px}
+.ped .meta a{color:var(--accent);font-weight:600}
+.ped .fila{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:.9rem}
+.ped .fila b{color:var(--muted);font-weight:600}
+.ped .saldo{color:var(--accent);font-weight:700}
+.pestanas{display:flex;gap:2px;margin:0 0 16px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.pestanas::-webkit-scrollbar{display:none}
+.pestanas button{flex:none}
+@media (max-width:560px){.resumen{grid-template-columns:1fr 1fr}.resumen b{font-size:1.25rem}.pestanas button{padding:10px 10px}}
 .pestanas button{border:0;background:none;padding:10px 14px;font-weight:700;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
 .pestanas button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
 .sec-emoji{width:56px;height:56px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:1.7rem}
@@ -205,8 +221,8 @@ function usarSecciones(){
   if (filtro !== "todas" && !CATS.some(c => c.id === filtro)) filtro = "todas";
   $("#categoria").innerHTML = CATS.map(c => `<option value="${c.id}">${esc(c.e)} ${esc(c.n)}</option>`).join("");
 }
-const dibujar = () => vista === "secciones" ? pintarSecciones() : pintar();
-const pestanas = () => `<nav class="pestanas" role="tablist"><button role="tab" data-vista="productos" aria-selected="${vista === "productos"}">Productos</button><button role="tab" data-vista="secciones" aria-selected="${vista === "secciones"}">Secciones</button></nav>`;
+const dibujar = () => vista === "secciones" ? pintarSecciones() : vista === "pedidos" ? (pedidos ? pintarPedidos() : cargarPedidos()) : pintar();
+const pestanas = () => `<nav class="pestanas" role="tablist"><button role="tab" data-vista="productos" aria-selected="${vista === "productos"}">Productos</button><button role="tab" data-vista="secciones" aria-selected="${vista === "secciones"}">Secciones</button><button role="tab" data-vista="pedidos" aria-selected="${vista === "pedidos"}">Pedidos</button></nav>`;
 function pintar(){
   const ver = lista.filter(p => filtro === "todas" || p.categoria === filtro);
   const chip = (id, n) => `<button class="chip" data-filtro="${id}" aria-pressed="${filtro === id}">${n}</button>`;
@@ -219,7 +235,9 @@ function pintar(){
   </article>`).join("") : `<p class="vacio">No hay productos en esta sección.</p>`}</div>`;
 }
 document.addEventListener("click", async ev => {
-  const t = ev.target.closest("[data-filtro],[data-nuevo],[data-editar],[data-ver],[data-vista],[data-sec-nueva],[data-sec-editar],[data-sec-mover]"); if (!t) return;
+  const t = ev.target.closest("[data-filtro],[data-nuevo],[data-editar],[data-ver],[data-vista],[data-sec-nueva],[data-sec-editar],[data-sec-mover],[data-fped],[data-recargar-ped]"); if (!t) return;
+  if (t.dataset.fped){ filtroPed = t.dataset.fped; pintarPedidos(); return; }
+  if (t.dataset.recargarPed){ cargarPedidos(); return; }
   if (t.dataset.vista){ vista = t.dataset.vista; dibujar(); }
   else if (t.dataset.secNueva) abrirSeccion(null);
   else if (t.dataset.secEditar) abrirSeccion(secciones.find(x => x.id === t.dataset.secEditar));
@@ -424,6 +442,65 @@ $("#secBorrar").onclick = async () => {
   if (error) return avisoSec("No se pudo borrar: " + error.message, true);
   secciones = secciones.filter(s => s !== x); usarSecciones(); $("#dlgSec").close(); pintarSecciones();
 };
+
+/* ===== Pedidos ===== */
+const ESTADOS = [
+  ["pendiente",  "Pendiente",           "#e0a100"],  // recién llegado: falta verificar el pago
+  ["en_espera",  "En espera",           "#d9822b"],  // esperando fotos, datos o el abono
+  ["por_hacer",  "Por hacer",           "#4a90d9"],  // pago confirmado, en cola
+  ["en_proceso", "En proceso",          "#8e6cd9"],
+  ["listo",      "Listo para entregar", "#2fa36b"],
+  ["entregado",  "Entregado",           "#7a7a7a"],
+  ["cancelado",  "Cancelado",           "#c0392b"]
+];
+const estado = id => ESTADOS.find(e => e[0] === id) || ESTADOS[0];
+const ACTIVOS = ["pendiente", "en_espera", "por_hacer", "en_proceso", "listo"];
+let pedidos = null, filtroPed = "activos";
+async function cargarPedidos(){
+  $("#app").innerHTML = pestanas() + `<p class="vacio">Cargando pedidos…</p>`;
+  const { data, error } = await sb.from("pedidos").select("*").order("numero", { ascending: false }).limit(1000);
+  if (error){ $("#app").innerHTML = pestanas() + `<p class="vacio">No pude cargar los pedidos: ${esc(error.message)}</p>`; return; }
+  pedidos = data; if (vista === "pedidos") pintarPedidos();
+}
+const fechaHora = iso => new Date(iso).toLocaleString("es-VE", { timeZone: "America/Caracas", day: "2-digit", month: "2-digit", year: "numeric", hour: "numeric", minute: "2-digit" });
+const fechaCorta = d => d ? d.split("-").reverse().join("/") : "";
+// 0424-1234567 → 584241234567 para abrir el chat del cliente
+const waCliente = t => { let d = String(t).replace(/\D/g, ""); if (d.length === 11 && d[0] === "0") d = "58" + d.slice(1); return "https://wa.me/" + d; };
+function pintarPedidos(){
+  const ahora = new Date(), mes = ahora.toLocaleDateString("en-CA", { timeZone: "America/Caracas" }).slice(0, 7);
+  const delMes = pedidos.filter(p => new Date(p.creado).toLocaleDateString("en-CA", { timeZone: "America/Caracas" }).slice(0, 7) === mes && p.estado !== "cancelado");
+  const cuenta = id => pedidos.filter(p => p.estado === id).length;
+  const ver = pedidos.filter(p => filtroPed === "todos" || (filtroPed === "activos" ? ACTIVOS.includes(p.estado) : p.estado === filtroPed));
+  const chip = (id, n) => `<button class="chip" data-fped="${id}" aria-pressed="${filtroPed === id}">${n}</button>`;
+  $("#app").innerHTML = pestanas() + `<div class="barra"><h1 style="margin:0">Pedidos</h1><button class="btn ghost" data-recargar-ped="1">↻ Actualizar</button></div>
+  <div class="resumen">
+    <div><b>${pedidos.length}</b><span>pedidos en total</span></div>
+    <div><b>${delMes.length}</b><span>este mes</span></div>
+    <div><b>${usd(delMes.reduce((a, p) => a + Number(p.total), 0))}</b><span>vendido este mes</span></div>
+    <div><b>${cuenta("pendiente")}</b><span>pendientes por revisar</span></div>
+  </div>
+  <nav class="chips" aria-label="Filtrar por estado">${chip("activos", "Activos (" + pedidos.filter(p => ACTIVOS.includes(p.estado)).length + ")")}${ESTADOS.map(e => chip(e[0], e[1] + " (" + cuenta(e[0]) + ")")).join("")}${chip("todos", "Todos (" + pedidos.length + ")")}</nav>
+  <div class="lista">${ver.length ? ver.map(p => {
+    const e = estado(p.estado), saldo = Number(p.total) - Number(p.abonado);
+    return `<article class="ped" style="--c:${e[2]}">
+    <div class="ped-top"><h3>Pedido N° ${p.numero}</h3>
+      <select data-estado="${p.numero}" aria-label="Estado del pedido ${p.numero}">${ESTADOS.map(x => `<option value="${x[0]}" ${x[0] === p.estado ? "selected" : ""}>${x[1]}</option>`).join("")}</select></div>
+    <div class="meta"><span>${fechaHora(p.creado)}</span><span>·</span><b>${esc(p.cliente)}</b><span>·</span><a href="${waCliente(p.telefono)}" target="_blank" rel="noopener">${esc(p.telefono)}</a></div>
+    <ul>${(p.items || []).map(i => `<li>${i.q} × ${esc(i.nombre)} — ${usd(i.precio * i.q)}</li>`).join("")}</ul>
+    <div class="fila"><span><b>Total:</b> ${usd(p.total)}</span><span><b>Abonado:</b> ${usd(p.abonado)} (${p.modo === "mitad" ? "50 %" : "de contado"})</span>${saldo > 0 ? `<span class="saldo">Resta: ${usd(saldo)}</span>` : ""}</div>
+    <div class="fila"><span><b>Pago:</b> ${esc(p.metodo)}</span><span><b>Ref.:</b> ${esc(p.referencia || "—")}</span></div>
+    <div class="fila"><span><b>Entrega:</b> ${p.entrega === "delivery" ? "Delivery — " + esc(p.direccion || "") : "Pick-up"}</span><span><b>Para:</b> ${fechaCorta(p.fecha)} ${esc(p.hora || "")}</span></div>
+    ${p.nota ? `<div class="fila"><span><b>Personalización:</b> ${esc(p.nota)}</span></div>` : ""}
+  </article>`; }).join("") : `<p class="vacio">${pedidos.length ? "No hay pedidos con este estado." : "Todavía no hay pedidos. Aparecerán aquí cuando un cliente envíe uno desde la tienda."}</p>`}</div>`;
+}
+document.addEventListener("change", async ev => {
+  const sel = ev.target.closest("[data-estado]"); if (!sel) return;
+  const p = pedidos.find(x => x.numero == sel.dataset.estado), antes = p.estado;
+  sel.disabled = true;
+  const { error } = await sb.from("pedidos").update({ estado: sel.value }).eq("numero", p.numero);
+  if (error){ alert("No se pudo cambiar el estado: " + error.message); sel.value = antes; sel.disabled = false; return; }
+  p.estado = sel.value; pintarPedidos();
+});
 
 /* ===== Inicio ===== */
 sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_OUT") vistaLogin(); });

@@ -15,6 +15,7 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 - `admin.html`: panel de administración (inicio de sesión, agregar/editar/ocultar/borrar productos, subir fotos).
 - `compartido.js`: conexión a Supabase y secciones de respaldo (`CATS`). Si se cambia, sube el número en `compartido.js?v=N` dentro de index.html y admin.html para que los navegadores no usen la versión vieja.
 - `supabase/esquema.sql`: tablas `productos` y `admins`, reglas de seguridad y almacenamiento de fotos (bucket `productos`).
+- `supabase/04-pedidos.sql`: tabla `pedidos` (numeración automática, estados) y función `crear_pedido` que usa la tienda; recalcula precios desde `productos`. Los clientes no pueden leer pedidos, solo los admins.
 - `supabase/03-secciones.sql`: tabla `secciones` (id, nombre, emoji, orden); cada producto debe pertenecer a una sección existente.
 - `supabase/02-ofertas-y-galeria.sql`: agrega `precio_oferta` y `imagenes` (lista de fotos) y elimina la columna vieja `imagen`.
 - `tasa.json`: tasa euro del día, la escribe sola el flujo de GitHub.
@@ -26,7 +27,7 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 ## Decisiones tomadas
 - Marca: color principal #4f000b, secundario #ffd6e0. Títulos en Lobster; texto en Agrandir, con Bricolage Grotesque de respaldo mientras no estén los archivos.
 - El catálogo muestra solo precios en USD. El monto en bolívares aparece solo al elegir pagar en bolívares, a tasa euro.
-- Pago: abono del 50 % (sin él no se agenda el pedido) o de contado. Métodos en la web: bolívares (pago móvil), Binance y Zinli. El efectivo se aceptó en las preguntas frecuentes pero no está como opción en el pago.
+- Pago: abono del 50 % (sin él no se agenda el pedido) o de contado. Métodos en la web: bolívares (pago móvil), Binance, Zinli, Zelle (nelsonrodriguez01@gmail.com) y PayPal (consultar datos por WhatsApp; la referencia es opcional). El efectivo se aceptó en las preguntas frecuentes pero no está como opción en el pago.
 - Los productos con `p:null` muestran «Precio por confirmar» y un botón «Consultar precio» por WhatsApp. Al poner el precio en USD pasan a tener botón «Agregar».
 - Se creó la sección Llaveros. Los tres marcos con foto quedaron en Portarretratos.
 - Animaciones sutiles al aparecer, al pasar el mouse y al agregar al carrito; se desactivan si el dispositivo pide menos movimiento.
@@ -37,6 +38,8 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 - Ofertas: `precio_oferta` debe ser menor que `precio`. En la tienda se muestra «Antes: precio tachado» y «Hoy: precio en oferta», con etiqueta OFERTA; el carrito cobra el precio en oferta.
 - Fotos: hasta 8 por producto, la primera es la principal. En la tarjeta se deslizan dentro del círculo con puntos debajo; al tocar una se abre un visor grande con flechas.
 - Secciones administrables desde el panel. En la tienda solo se ven las que tienen productos visibles, y «Ofertas» aparece primero, sola, cuando hay productos con precio en oferta.
+- Pedidos: se registran al presionar «Enviar pedido por WhatsApp». Si Supabase falla, el pedido igual se envía por WhatsApp, sin número. Estados: pendiente, en espera, por hacer, en proceso, listo para entregar, entregado, cancelado.
+- Fundación: noviembre de 2020.
 
 ## Pendiente
 - Crear las cuentas de los admins y agregarlas a la tabla `admins`.
