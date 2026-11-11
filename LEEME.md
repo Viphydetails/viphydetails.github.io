@@ -1,5 +1,7 @@
 # Tienda Viphy
 
+Tienda: https://viphydetails.github.io/ · Panel de admin: https://viphydetails.github.io/admin.html
+
 Web de catálogo, carrito y pago, con pedido por WhatsApp y tasa euro del BCV que se actualiza sola.
 
 ## Publicar (gratis, con GitHub Pages)
@@ -15,7 +17,7 @@ Web de catálogo, carrito y pago, con pedido por WhatsApp y tasa euro del BCV qu
 - Los productos ya no se editan aquí: se cargan desde el panel de admin (ver abajo).
 
 ## Panel de administración (productos y fotos)
-- Está en `admin.html`. Ya publicada la web: `https://TU-USUARIO.github.io/viphy/admin.html`. No aparece en la tienda.
+- Está en `admin.html`. Ya publicada la web: `https://viphydetails.github.io/admin.html`. No aparece en la tienda.
 - Ahí se agregan, editan, ocultan y borran productos, y se suben sus fotos. Los cambios se ven al instante en la tienda.
 - Los datos viven en Supabase (proyecto «Viphy»). La conexión está en `compartido.js`, junto con las secciones del catálogo.
 - **Agregar un admin:** en Supabase → Authentication → Users → Add user → Create new user (correo y contraseña, marca Auto Confirm User). Luego en SQL Editor ejecuta:

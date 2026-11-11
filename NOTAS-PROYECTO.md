@@ -5,6 +5,11 @@ Resumen para retomar el trabajo en otra conversación. Sube esta carpeta (el .zi
 ## Qué es
 Tienda virtual de regalos personalizados. Web de una sola página (`index.html`): portada con reseña, catálogo por secciones, preguntas frecuentes, contacto, carrito, pago y envío del pedido por WhatsApp.
 
+## Enlaces
+- Tienda: https://viphydetails.github.io/
+- Panel de admin: https://viphydetails.github.io/admin.html
+- Repositorio: https://github.com/Viphydetails/viphydetails.github.io
+
 ## Estructura
 - `index.html`: toda la tienda. Arriba del script están los datos editables: `CONFIG` (nombre, reseña, WhatsApp, Instagram, correo, dirección, datos de pago) y `FAQ`. `PRODUCTOS` quedó solo como respaldo.
 - `admin.html`: panel de administración (inicio de sesión, agregar/editar/ocultar/borrar productos, subir fotos).
@@ -41,7 +46,7 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 - Confirmar que el correo es viphy.details@gmail.com.
 - Decidir si se agrega la opción de efectivo en el pago y una línea de «no hay devoluciones» junto al aviso del 50 %.
 - Confirmar que los clientes de las fotos dieron permiso para mostrarlas.
-- Publicar en GitHub Pages y probar un pedido real.
+- Probar un pedido real desde el teléfono.
 
 ## Cómo agregar un producto
 Desde `admin.html` → «+ Nuevo producto». Precio vacío = «Precio por confirmar». Para una sección nueva, agrégala en `CATS` dentro de `compartido.js`.
