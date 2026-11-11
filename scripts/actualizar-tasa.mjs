@@ -20,7 +20,7 @@ function descargar(url) {
 }
 
 export function extraerEuro(html) {
-  const m = html.match(/id="euro"[\s\S]*?<strong>\s*([\d.,]+)\s*<\/strong>/);
+  const m = html.match(/id="euro"[\s\S]*?<strong[^>]*>\s*([\d.,]+)\s*<\/strong>/);
   if (!m) throw new Error("No encontré la tasa del euro: el BCV pudo haber cambiado su página.");
   let t = m[1].trim();
   if (t.includes(",")) t = t.replace(/\./g, "").replace(",", ".");

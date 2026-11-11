@@ -252,6 +252,7 @@ const FAQ = [
 const $ = s => document.querySelector(s);
 const usd = n => "$" + n.toFixed(2);
 const bs = n => "Bs. " + (n * CONFIG.tasa).toLocaleString("es-VE", {minimumFractionDigits:2, maximumFractionDigits:2});
+const tasaTxt = () => CONFIG.tasa.toLocaleString("es-VE", {minimumFractionDigits:2, maximumFractionDigits:2});
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let view = "cat", cart = {}, last = "";
 const f = {nombre:"", tel:"", entrega:"delivery", dir:"", fecha:"", hora:"", metodo:"bs", modo:"mitad", ref:"", nota:""};
@@ -367,7 +368,7 @@ function payView(){
   <label>Método de pago</label><div class="opts">${Object.entries(CONFIG.pagos).map(([k, v]) => opt("metodo", k, v.nombre)).join("")}</div>
   <div class="line total"><span>A pagar ahora</span><span>${usd(aPagar())}</span></div>
   ${f.metodo==="bs" && !CONFIG.tasa ? `<p class="notice">La tasa del día no está disponible ahora. Escríbenos por WhatsApp para confirmar el monto en bolívares.</p>` : ""}
-  ${f.metodo==="bs" && CONFIG.tasa ? `<div class="line total"><span>Monto en bolívares <span class="bs">(tasa euro ${CONFIG.tasa} · ${CONFIG.tasaFecha})</span></span><span>${bs(aPagar())}</span></div>` : ""}
+  ${f.metodo==="bs" && CONFIG.tasa ? `<div class="line total"><span>Monto en bolívares <span class="bs">(tasa euro ${tasaTxt()} · ${CONFIG.tasaFecha})</span></span><span>${bs(aPagar())}</span></div>` : ""}
   <div class="notice"><pre style="margin:0 0 10px;font:inherit;white-space:pre-wrap">${esc(CONFIG.pagos[f.metodo].datos)}</pre><button class="btn ghost" data-copiar="1">Copiar datos y monto</button></div>
   <label for="ref">Número de referencia o comprobante del pago</label><input type="text" id="ref" data-f="ref" value="${esc(f.ref)}">
   <label for="nota">Personalización: nombres, frases, colores (las fotos las envías por WhatsApp)</label><textarea id="nota" data-f="nota" rows="2">${esc(f.nota)}</textarea></div>
@@ -382,7 +383,7 @@ function mensaje(){
     `*Entrega:* ${f.entrega==="delivery" ? "Delivery — " + f.dir : "Pick-up"}`,
     `*Fecha y hora:* ${f.fecha} ${f.hora}`,
     `*Pago:* ${MET[f.metodo]} · ${f.modo==="mitad" ? "Abono del 50 %" : "De contado"}`,
-    `*Monto abonado:* ${usd(aPagar())}${f.metodo==="bs" && CONFIG.tasa ? " (" + bs(aPagar()) + " a tasa euro " + CONFIG.tasa + ")" : ""}`,
+    `*Monto abonado:* ${usd(aPagar())}${f.metodo==="bs" && CONFIG.tasa ? " (" + bs(aPagar()) + " a tasa euro " + tasaTxt() + ")" : ""}`,
     `*Referencia:* ${f.ref}`);
   if (f.nota) L.push(`*Notas:* ${f.nota}`);
   return L.join("\n");
