@@ -1,0 +1,4 @@
+Coloca aquí los archivos de la tipografía Agrandir en formato .woff2:
+  Agrandir-Regular.woff2
+  Agrandir-Bold.woff2
+Si no están, la web usa una tipografía parecida de respaldo.
