@@ -25,7 +25,7 @@ Web de catálogo, carrito y pago, con pedido por WhatsApp y tasa euro del BCV qu
 - **Quitar un admin:** `delete from public.admins where email = 'correo@ejemplo.com';`
 - **Ofertas:** en el producto escribe el «Precio en oferta». La tienda muestra «Antes» con el precio tachado, «Hoy» con el de oferta y la etiqueta OFERTA, y cobra el precio en oferta. Para quitarla, deja el campo vacío.
 - **Secciones:** en la pestaña «Secciones» del panel se crean, renombran, ordenan (↑ ↓) y borran. Una sección con productos no se puede borrar hasta mover o borrar sus productos. Las secciones vacías no aparecen en la tienda.
-- **Etiqueta OFERTA y sección Ofertas:** se ponen solas cuando un producto tiene «Precio en oferta». El editor te avisa el % de descuento.
+- **Ofertas:** en el editor del producto marca «🏷️ Etiquetar como oferta» y escribe el precio en oferta. El producto sale con la etiqueta OFERTA y en la sección Ofertas de la tienda; el editor te avisa el % de descuento. Para quitar la oferta, desmarca la casilla y guarda.
 - **Varias fotos:** cada producto admite hasta 8. La primera es la principal; en la tienda se deslizan en carrusel y al tocarlas se ven en grande.
 - `supabase/esquema.sql`, `02-ofertas-y-galeria.sql` y `03-secciones.sql` (en ese orden) crean toda la base de datos. Ya se ejecutaron; solo hace falta de nuevo si creas otro proyecto.
 - Si Supabase no responde, la tienda muestra la última lista de productos que vio el visitante, o la lista de respaldo de `index.html`.

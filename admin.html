@@ -77,6 +77,7 @@ dialog::backdrop{background:rgba(43,0,6,.55)}
 .sec-emoji{width:56px;height:56px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:1.7rem}
 .flechas{display:flex;gap:4px}
 .flechas .btn{min-width:38px}
+.oferta-caja{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:14px}
 .aviso-oferta{background:var(--soft);border-radius:10px;padding:8px 12px;font-size:.88rem;margin:10px 0 0}
 .aviso-oferta b{color:var(--accent)}
 #emoji{font-size:1.4rem;width:5.5rem;text-align:center}
@@ -110,12 +111,15 @@ dialog::backdrop{background:rgba(43,0,6,.55)}
     <label for="nombre">Nombre</label><input type="text" id="nombre" required maxlength="120">
     <label for="descripcion">Descripción</label><textarea id="descripcion" rows="3" maxlength="400"></textarea>
     <label for="categoria">Sección</label><select id="categoria"></select>
-    <div class="dos">
-      <div><label for="precio">Precio en USD</label><input type="text" id="precio" inputmode="decimal" placeholder="Vacío = por confirmar"></div>
-      <div><label for="oferta">Precio en oferta (USD)</label><input type="text" id="oferta" inputmode="decimal" placeholder="Vacío = sin oferta"></div>
+    <label for="precio">Precio en USD</label><input type="text" id="precio" inputmode="decimal" placeholder="Vacío = por confirmar">
+    <div class="oferta-caja">
+      <label class="check" style="margin:0"><input type="checkbox" id="enOferta"> <b>🏷️ Etiquetar como oferta</b></label>
+      <div id="bloqueOferta" class="oculta">
+        <label for="oferta">Precio en oferta (USD)</label><input type="text" id="oferta" inputmode="decimal" placeholder="Ej.: 20">
+        <p class="ayuda">La tienda mostrará «Antes» con el precio normal tachado y «Hoy» con este precio.</p>
+        <p class="aviso-oferta oculta" id="avisoOferta"></p>
+      </div>
     </div>
-    <p class="ayuda">Con oferta, la tienda muestra «Antes» con el precio tachado y «Hoy» con el precio en oferta.</p>
-    <p class="aviso-oferta oculta" id="avisoOferta"></p>
     <label class="check"><input type="checkbox" id="visible"> Mostrar en la tienda</label>
     <label class="check"><input type="checkbox" id="nuevo"> Etiqueta NEW</label>
     <p class="msg" id="dlgMsg" role="alert"></p>
@@ -248,6 +252,7 @@ function abrir(p){
   $("#categoria").value = p ? p.categoria : (filtro !== "todas" ? filtro : CATS[0].id);
   $("#precio").value = p && p.precio != null ? String(p.precio) : "";
   $("#oferta").value = p && p.precio_oferta != null ? String(p.precio_oferta) : "";
+  $("#enOferta").checked = !!(p && p.precio_oferta != null); mostrarOferta();
   $("#visible").checked = p ? p.visible : true;
   $("#nuevo").checked = p ? p.nuevo : false;
   $("#borrar").classList.toggle("oculta", !p);
@@ -278,10 +283,12 @@ $("#archivo").onchange = async ev => {
 };
 function avisoOferta(){
   const precio = numero($("#precio").value), oferta = numero($("#oferta").value), a = $("#avisoOferta");
-  const ok = precio > 0 && oferta !== null && oferta >= 0 && oferta < precio;
+  const ok = $("#enOferta").checked && precio > 0 && oferta !== null && oferta >= 0 && oferta < precio;
   a.classList.toggle("oculta", !ok);
   if (ok) a.innerHTML = `🏷️ Se mostrará con la etiqueta <b>OFERTA</b> (${Math.round((1 - oferta / precio) * 100)} % de descuento) y aparecerá también en la sección <b>Ofertas</b> de la tienda.`;
 }
+function mostrarOferta(){ $("#bloqueOferta").classList.toggle("oculta", !$("#enOferta").checked); }
+$("#enOferta").onchange = () => { mostrarOferta(); if ($("#enOferta").checked) $("#oferta").focus(); avisoOferta(); };
 $("#precio").addEventListener("input", avisoOferta);
 $("#oferta").addEventListener("input", avisoOferta);
 const numero = txt => { const t = txt.trim().replace(/\s|\$/g, "").replace(",", "."); return t === "" ? null : Number(t); };
@@ -309,7 +316,8 @@ async function borrarArchivos(urls){
 $("#form").onsubmit = async ev => {
   ev.preventDefault();
   const nombre = $("#nombre").value.trim();
-  const precio = numero($("#precio").value), oferta = numero($("#oferta").value);
+  const precio = numero($("#precio").value), oferta = $("#enOferta").checked ? numero($("#oferta").value) : null;
+  if ($("#enOferta").checked && oferta === null) return aviso("Escribe el precio en oferta, o desmarca «Etiquetar como oferta».", true);
   if (!nombre) return aviso("Escribe el nombre del producto.", true);
   if (precio !== null && !(precio >= 0)) return aviso("El precio debe ser un número, por ejemplo 25 o 25.50.", true);
   if (oferta !== null && !(oferta >= 0)) return aviso("El precio en oferta debe ser un número, por ejemplo 20 o 19.99.", true);
