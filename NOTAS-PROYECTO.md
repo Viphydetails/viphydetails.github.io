@@ -13,8 +13,9 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 ## Estructura
 - `index.html`: toda la tienda. Arriba del script están los datos editables: `CONFIG` (nombre, reseña, WhatsApp, Instagram, correo, dirección, datos de pago) y `FAQ`. `PRODUCTOS` quedó solo como respaldo.
 - `admin.html`: panel de administración (inicio de sesión, agregar/editar/ocultar/borrar productos, subir fotos).
-- `compartido.js`: conexión a Supabase y secciones del catálogo (`CATS`), usado por la tienda y el panel.
+- `compartido.js`: conexión a Supabase y secciones de respaldo (`CATS`). Si se cambia, sube el número en `compartido.js?v=N` dentro de index.html y admin.html para que los navegadores no usen la versión vieja.
 - `supabase/esquema.sql`: tablas `productos` y `admins`, reglas de seguridad y almacenamiento de fotos (bucket `productos`).
+- `supabase/03-secciones.sql`: tabla `secciones` (id, nombre, emoji, orden); cada producto debe pertenecer a una sección existente.
 - `supabase/02-ofertas-y-galeria.sql`: agrega `precio_oferta` y `imagenes` (lista de fotos) y elimina la columna vieja `imagen`.
 - `tasa.json`: tasa euro del día, la escribe sola el flujo de GitHub.
 - `scripts/actualizar-tasa.mjs` y `.github/workflows/tasa.yml`: leen la tasa euro en bcv.org.ve dos veces al día (7:00 a. m. y 6:00 p. m., hora de Caracas).
@@ -35,6 +36,7 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 
 - Ofertas: `precio_oferta` debe ser menor que `precio`. En la tienda se muestra «Antes: precio tachado» y «Hoy: precio en oferta», con etiqueta OFERTA; el carrito cobra el precio en oferta.
 - Fotos: hasta 8 por producto, la primera es la principal. En la tarjeta se deslizan dentro del círculo con puntos debajo; al tocar una se abre un visor grande con flechas.
+- Secciones administrables desde el panel. En la tienda solo se ven las que tienen productos visibles, y «Ofertas» aparece primero, sola, cuando hay productos con precio en oferta.
 
 ## Pendiente
 - Crear las cuentas de los admins y agregarlas a la tabla `admins`.
@@ -49,4 +51,4 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 - Probar un pedido real desde el teléfono.
 
 ## Cómo agregar un producto
-Desde `admin.html` → «+ Nuevo producto». Precio vacío = «Precio por confirmar». Para una sección nueva, agrégala en `CATS` dentro de `compartido.js`.
+Desde `admin.html` → «+ Nuevo producto». Precio vacío = «Precio por confirmar». Las secciones se crean en la pestaña «Secciones» del panel.

@@ -213,7 +213,7 @@ a.btn{text-align:center}
   <button class="vis-fl izq" id="visPrev" aria-label="Foto anterior">‹</button><button class="vis-fl der" id="visNext" aria-label="Foto siguiente">›</button></div>
   <div class="dots" id="visDots"></div>
 </dialog>
-<script src="compartido.js"></script>
+<script src="compartido.js?v=2"></script>
 <script>
 /* ===== CONFIGURACIÓN: edita aquí ===== */
 const CONFIG = {
@@ -302,7 +302,7 @@ function tarjeta(p){
     : cart[p.id] ? `<span class="qty"><button data-a="${p.id}:-1" aria-label="Quitar uno">−</button><b>${cart[p.id]}</b><button data-a="${p.id}:1" aria-label="Agregar uno">+</button></span>`
     : `<button class="btn" data-a="${p.id}:1">Agregar</button>`;
   const imgs = fotosDe(p);
-  const fotos = imgs.length ? `<div class="car">${imgs.map((u, i) => `<img src="${esc(u)}" alt="${esc(p.n)}${imgs.length > 1 ? " · foto " + (i + 1) : ""}" loading="lazy" data-foto="${p.id}:${i}">`).join("")}</div>` : `<span aria-hidden="true">${c.e}</span>`;
+  const fotos = imgs.length ? `<div class="car">${imgs.map((u, i) => `<img src="${esc(u)}" alt="${esc(p.n)}${imgs.length > 1 ? " · foto " + (i + 1) : ""}" loading="lazy" data-foto="${p.id}:${i}">`).join("")}</div>` : `<span aria-hidden="true">${esc(c.e)}</span>`;
   const puntos = imgs.length > 1 ? `<div class="dots">${imgs.map((_, i) => `<button class="${i ? "" : "on"}" data-punto="${i}" aria-label="Ver foto ${i + 1}"></button>`).join("")}</div>` : "";
   const precio = sin ? '<span class="bs">Precio por confirmar</span>'
     : p.antes != null ? `<span class="antes">Antes: <s>${usd(p.antes)}</s></span><span class="hoy">Hoy: ${usd(p.p)}</span>` : usd(p.p);
@@ -322,14 +322,21 @@ function vitrina(){
   const delay = -(((performance.now() - T0) / 1000) % dur);
   return `<section class="vitrina" aria-label="Algunos de nuestros trabajos"><div class="cinta" style="--dur:${dur}s;animation-delay:${delay.toFixed(2)}s">${base.map(p => item(p, false)).join("")}${base.map(p => item(p, true)).join("")}</div></section>`;
 }
+// Secciones que se muestran: «Ofertas» primero si hay productos en oferta, y luego las que tienen productos.
+function seccionesVisibles(){
+  const ofertas = PRODUCTOS.filter(p => p.antes != null);
+  const lista = CATS.map(c => ({...c, items: PRODUCTOS.filter(p => p.c === c.id)})).filter(c => c.items.length);
+  return ofertas.length ? [{id:"ofertas", n:"Ofertas", e:"🏷️", items: ofertas}, ...lista] : lista;
+}
 function catalog(){
+  const secs = seccionesVisibles();
   const foto = CONFIG.fotoPortada ? `<img src="${esc(CONFIG.fotoPortada)}" alt="${esc(CONFIG.tienda)}">` : `<span class="iso" aria-hidden="true"></span>`;
   const wa = "https://wa.me/" + CONFIG.whatsapp;
   const mapa = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(CONFIG.direccion);
-  return `<section class="hero"><div><p class="kick">Regalos personalizados</p><h1>${esc(CONFIG.tienda)}</h1><p class="sub">${esc(CONFIG.resena)}</p><button class="btn" data-sec="cajas">Ver catálogo</button></div><div class="portada">${foto}</div></section>
+  return `<section class="hero"><div><p class="kick">Regalos personalizados</p><h1>${esc(CONFIG.tienda)}</h1><p class="sub">${esc(CONFIG.resena)}</p><button class="btn" data-sec="${secs[0] ? secs[0].id : ""}">Ver catálogo</button></div><div class="portada">${foto}</div></section>
   ${vitrina()}
-  <nav class="chips" aria-label="Secciones del catálogo">${CATS.map(c => `<button class="chip" data-sec="${c.id}">${c.e} ${c.n}</button>`).join("")}</nav>
-  ${CATS.map(c => `<section id="sec-${c.id}" class="sec"><h2 class="t">${c.n}</h2><div class="grid">${PRODUCTOS.filter(p => p.c === c.id).map(tarjeta).join("")}</div></section>`).join("")}
+  <nav class="chips" aria-label="Secciones del catálogo">${secs.map(c => `<button class="chip" data-sec="${esc(c.id)}">${esc(c.e)} ${esc(c.n)}</button>`).join("")}</nav>
+  ${secs.map(c => `<section id="sec-${esc(c.id)}" class="sec"><h2 class="t">${esc(c.n)}</h2><div class="grid">${c.items.map(tarjeta).join("")}</div></section>`).join("")}
   <section class="sec"><h2 class="t">Preguntas frecuentes</h2>${FAQ.map(q => `<details class="faq"><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join("")}</section>
   <section class="sec contacto"><h2 class="t">Contacto y ubicación</h2><div class="box">
   <div class="line"><span>WhatsApp</span><a href="${wa}" target="_blank" rel="noopener">+${esc(CONFIG.whatsapp)}</a></div>
@@ -474,13 +481,17 @@ const desdeFila = r => {
   return {id:r.id, c:r.categoria, n:r.nombre, d:r.descripcion || "", p: oferta ?? precio, antes: oferta != null ? precio : null, imgs: r.imagenes || [], nuevo:r.nuevo};
 };
 try { const g = JSON.parse(localStorage.getItem("viphy-productos") || "null"); if (Array.isArray(g)) PRODUCTOS = g; } catch (e) {}
+try { const g = JSON.parse(localStorage.getItem("viphy-secciones") || "null"); if (Array.isArray(g) && g.length) CATS = g; } catch (e) {}
 async function cargarProductos(){
   try{
-    const r = await fetch(SUPABASE.url + "/rest/v1/productos?select=id,categoria,nombre,descripcion,precio,precio_oferta,imagenes,nuevo&visible=eq.true&order=orden.asc,id.asc",
-      {headers:{apikey: SUPABASE.key}, cache:"no-store"});
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    PRODUCTOS = (await r.json()).map(desdeFila);
-    try { localStorage.setItem("viphy-productos", JSON.stringify(PRODUCTOS)); } catch (e) {}
+    const pedir = async ruta => { const r = await fetch(SUPABASE.url + "/rest/v1/" + ruta, {headers:{apikey: SUPABASE.key}, cache:"no-store"}); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+    const [filas, secs] = await Promise.all([
+      pedir("productos?select=id,categoria,nombre,descripcion,precio,precio_oferta,imagenes,nuevo&visible=eq.true&order=orden.asc,id.asc"),
+      pedir("secciones?select=id,nombre,emoji&order=orden.asc,nombre.asc")
+    ]);
+    PRODUCTOS = filas.map(desdeFila);
+    CATS = secs.map(x => ({id: x.id, n: x.nombre, e: x.emoji || "🎁"}));
+    try { localStorage.setItem("viphy-productos", JSON.stringify(PRODUCTOS)); localStorage.setItem("viphy-secciones", JSON.stringify(CATS)); } catch (e) {}
     if (view === "cat") { const y = window.scrollY; render(); window.scrollTo(0, y); } else render();
   }catch(e){ console.warn("No se pudieron cargar los productos de Supabase:", e.message); }
 }

@@ -71,6 +71,15 @@ dialog::backdrop{background:rgba(43,0,6,.55)}
 .pie{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:20px}
 .pie div{display:flex;gap:8px;flex-wrap:wrap}
 .oculta{display:none}
+.pestanas{display:flex;gap:6px;margin:0 0 16px;border-bottom:1px solid var(--line)}
+.pestanas button{border:0;background:none;padding:10px 14px;font-weight:700;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.pestanas button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.sec-emoji{width:56px;height:56px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:1.7rem}
+.flechas{display:flex;gap:4px}
+.flechas .btn{min-width:38px}
+.aviso-oferta{background:var(--soft);border-radius:10px;padding:8px 12px;font-size:.88rem;margin:10px 0 0}
+.aviso-oferta b{color:var(--accent)}
+#emoji{font-size:1.4rem;width:5.5rem;text-align:center}
 /* Tema vino fijo: se ve igual en todos los dispositivos, sin importar el modo claro u oscuro */
 :root,:root[data-theme]{--bg:#2b0006;--surface:#3d0711;--ink:#ffe8ee;--muted:#e3b0bd;--line:#6a1c2a;--accent:#ffd6e0;--accent-ink:#4f000b;--soft:#560d1a;--ok:#5fd6a0;--err:#ff8a80;color-scheme:dark}
 @media (max-width:560px){
@@ -106,6 +115,7 @@ dialog::backdrop{background:rgba(43,0,6,.55)}
       <div><label for="oferta">Precio en oferta (USD)</label><input type="text" id="oferta" inputmode="decimal" placeholder="Vacío = sin oferta"></div>
     </div>
     <p class="ayuda">Con oferta, la tienda muestra «Antes» con el precio tachado y «Hoy» con el precio en oferta.</p>
+    <p class="aviso-oferta oculta" id="avisoOferta"></p>
     <label class="check"><input type="checkbox" id="visible"> Mostrar en la tienda</label>
     <label class="check"><input type="checkbox" id="nuevo"> Etiqueta NEW</label>
     <p class="msg" id="dlgMsg" role="alert"></p>
@@ -116,8 +126,22 @@ dialog::backdrop{background:rgba(43,0,6,.55)}
   </form>
 </dialog>
 
+<dialog id="dlgSec" aria-labelledby="secTitulo">
+  <form class="dlg" id="formSec" novalidate>
+    <h2 id="secTitulo">Sección</h2>
+    <label for="secNombre">Nombre</label><input type="text" id="secNombre" required maxlength="40" placeholder="Ej.: Tazas personalizadas">
+    <label for="emoji">Emoji</label><input type="text" id="emoji" maxlength="8" placeholder="🎁">
+    <p class="ayuda">Aparece junto al nombre en la tienda y cuando un producto no tiene foto. En el teléfono, usa el teclado de emojis.</p>
+    <p class="msg" id="secMsg" role="alert"></p>
+    <div class="pie">
+      <button type="button" class="btn peligro" id="secBorrar">Borrar sección</button>
+      <div><button type="button" class="btn ghost" id="secCancelar">Cancelar</button><button type="submit" class="btn" id="secGuardar">Guardar</button></div>
+    </div>
+  </form>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="compartido.js"></script>
+<script src="compartido.js?v=2"></script>
 <script>
 const sb = supabase.createClient(SUPABASE.url, SUPABASE.key);
 const $ = s => document.querySelector(s);
@@ -128,7 +152,7 @@ const cat = id => CATS.find(c => c.id === id) || {n:id, e:"🎁"};
 
 const MAX_FOTOS = 8;
 // fotos del editor: {url} ya guardada, o {blob, url} nueva (url = vista previa local)
-let lista = [], filtro = "todas", actual = null, fotos = [];
+let lista = [], secciones = [], filtro = "todas", actual = null, fotos = [], vista = "productos", secActual = null;
 const precioTxt = p => p.precio == null ? "Precio por confirmar"
   : p.precio_oferta != null ? `<span class="tachado">${usd(p.precio)}</span> ${usd(p.precio_oferta)}` : usd(p.precio);
 
@@ -163,24 +187,40 @@ $("#salir").onclick = async () => { await sb.auth.signOut(); vistaLogin(); };
 
 /* ===== Lista ===== */
 async function cargar(){
-  const { data, error } = await sb.from("productos").select("*").order("orden").order("id");
-  if (error){ $("#app").innerHTML = `<p class="vacio">No pude cargar los productos: ${esc(error.message)}</p>`; return; }
-  lista = data; pintar();
+  const [pr, se] = await Promise.all([
+    sb.from("productos").select("*").order("orden").order("id"),
+    sb.from("secciones").select("*").order("orden").order("nombre")
+  ]);
+  const error = pr.error || se.error;
+  if (error){ $("#app").innerHTML = `<p class="vacio">No pude cargar los datos: ${esc(error.message)}</p>`; return; }
+  lista = pr.data; secciones = se.data; usarSecciones(); dibujar();
 }
+// Las secciones de Supabase pasan a CATS, que usan los filtros y el selector del editor.
+function usarSecciones(){
+  CATS = secciones.map(x => ({id: x.id, n: x.nombre, e: x.emoji || "🎁"}));
+  if (filtro !== "todas" && !CATS.some(c => c.id === filtro)) filtro = "todas";
+  $("#categoria").innerHTML = CATS.map(c => `<option value="${c.id}">${esc(c.e)} ${esc(c.n)}</option>`).join("");
+}
+const dibujar = () => vista === "secciones" ? pintarSecciones() : pintar();
+const pestanas = () => `<nav class="pestanas" role="tablist"><button role="tab" data-vista="productos" aria-selected="${vista === "productos"}">Productos</button><button role="tab" data-vista="secciones" aria-selected="${vista === "secciones"}">Secciones</button></nav>`;
 function pintar(){
   const ver = lista.filter(p => filtro === "todas" || p.categoria === filtro);
   const chip = (id, n) => `<button class="chip" data-filtro="${id}" aria-pressed="${filtro === id}">${n}</button>`;
-  $("#app").innerHTML = `<div class="barra"><h1 style="margin:0">Productos</h1><button class="btn" data-nuevo="1">+ Nuevo producto</button></div>
-  <nav class="chips" aria-label="Filtrar por sección">${chip("todas", "Todas (" + lista.length + ")")}${CATS.map(c => chip(c.id, c.e + " " + c.n + " (" + lista.filter(p => p.categoria === c.id).length + ")")).join("")}</nav>
+  $("#app").innerHTML = pestanas() + `<div class="barra"><h1 style="margin:0">Productos</h1><button class="btn" data-nuevo="1">+ Nuevo producto</button></div>
+  <nav class="chips" aria-label="Filtrar por sección">${chip("todas", "Todas (" + lista.length + ")")}${CATS.map(c => chip(c.id, esc(c.e) + " " + esc(c.n) + " (" + lista.filter(p => p.categoria === c.id).length + ")")).join("")}</nav>
   <div class="lista">${ver.length ? ver.map(p => `<article class="item${p.visible ? "" : " oculto"}">
-    <div class="mini">${p.imagenes.length ? `<img src="${esc(p.imagenes[0])}" alt="" loading="lazy">` : `<span aria-hidden="true">${cat(p.categoria).e}</span>`}</div>
+    <div class="mini">${p.imagenes.length ? `<img src="${esc(p.imagenes[0])}" alt="" loading="lazy">` : `<span aria-hidden="true">${esc(cat(p.categoria).e)}</span>`}</div>
     <div><h3>${esc(p.nombre)}</h3><div class="meta"><span>${esc(cat(p.categoria).n)}</span><span>·</span><b>${precioTxt(p)}</b>${p.imagenes.length > 1 ? `<span>· ${p.imagenes.length} fotos</span>` : ""}${p.precio_oferta != null ? '<span class="tag">Oferta</span>' : ""}${p.nuevo ? '<span class="tag">NEW</span>' : ""}${p.visible ? "" : '<span class="tag">Oculto</span>'}</div></div>
     <div class="botones"><button class="btn ghost chico" data-ver="${p.id}">${p.visible ? "Ocultar" : "Mostrar"}</button><button class="btn chico" data-editar="${p.id}">Editar</button></div>
   </article>`).join("") : `<p class="vacio">No hay productos en esta sección.</p>`}</div>`;
 }
 document.addEventListener("click", async ev => {
-  const t = ev.target.closest("[data-filtro],[data-nuevo],[data-editar],[data-ver]"); if (!t) return;
-  if (t.dataset.filtro){ filtro = t.dataset.filtro; pintar(); }
+  const t = ev.target.closest("[data-filtro],[data-nuevo],[data-editar],[data-ver],[data-vista],[data-sec-nueva],[data-sec-editar],[data-sec-mover]"); if (!t) return;
+  if (t.dataset.vista){ vista = t.dataset.vista; dibujar(); }
+  else if (t.dataset.secNueva) abrirSeccion(null);
+  else if (t.dataset.secEditar) abrirSeccion(secciones.find(x => x.id === t.dataset.secEditar));
+  else if (t.dataset.secMover) moverSeccion(t);
+  else if (t.dataset.filtro){ filtro = t.dataset.filtro; pintar(); }
   else if (t.dataset.nuevo) abrir(null);
   else if (t.dataset.editar) abrir(lista.find(p => p.id == t.dataset.editar));
   else if (t.dataset.ver){
@@ -192,7 +232,6 @@ document.addEventListener("click", async ev => {
 });
 
 /* ===== Editor ===== */
-$("#categoria").innerHTML = CATS.map(c => `<option value="${c.id}">${c.e} ${esc(c.n)}</option>`).join("");
 function pintarFotos(){
   $("#galeria").innerHTML = fotos.map((f, i) => `<div class="ft">${i === 0 ? '<span class="princ">Principal</span>' : ""}<img src="${esc(f.url)}" alt="Foto ${i + 1}">
     <div class="acc-ft"><button type="button" data-mover="${i}:-1" aria-label="Mover a la izquierda" ${i === 0 ? "disabled" : ""}>‹</button>
@@ -212,7 +251,7 @@ function abrir(p){
   $("#visible").checked = p ? p.visible : true;
   $("#nuevo").checked = p ? p.nuevo : false;
   $("#borrar").classList.toggle("oculta", !p);
-  aviso("");
+  aviso(""); avisoOferta();
   pintarFotos(); $("#dlg").showModal();
 }
 $("#cancelar").onclick = () => $("#dlg").close();
@@ -237,6 +276,14 @@ $("#archivo").onchange = async ev => {
   if (files.length > libres) avisos.push(`Solo se permiten ${MAX_FOTOS} fotos por producto.`);
   aviso(avisos.join(" "), avisos.length > 0);
 };
+function avisoOferta(){
+  const precio = numero($("#precio").value), oferta = numero($("#oferta").value), a = $("#avisoOferta");
+  const ok = precio > 0 && oferta !== null && oferta >= 0 && oferta < precio;
+  a.classList.toggle("oculta", !ok);
+  if (ok) a.innerHTML = `🏷️ Se mostrará con la etiqueta <b>OFERTA</b> (${Math.round((1 - oferta / precio) * 100)} % de descuento) y aparecerá también en la sección <b>Ofertas</b> de la tienda.`;
+}
+$("#precio").addEventListener("input", avisoOferta);
+$("#oferta").addEventListener("input", avisoOferta);
 const numero = txt => { const t = txt.trim().replace(/\s|\$/g, "").replace(",", "."); return t === "" ? null : Number(t); };
 // Recorta al centro en cuadrado y la reduce a 800 px como máximo.
 async function cuadrar(file){
@@ -306,6 +353,68 @@ $("#borrar").onclick = async () => {
   if (error) return aviso("No se pudo borrar: " + error.message, true);
   await borrarArchivos(actual.imagenes);
   lista = lista.filter(p => p !== actual); $("#dlg").close(); pintar();
+};
+
+/* ===== Secciones ===== */
+function pintarSecciones(){
+  const n = id => lista.filter(p => p.categoria === id).length;
+  $("#app").innerHTML = pestanas() + `<div class="barra"><h1 style="margin:0">Secciones</h1><button class="btn" data-sec-nueva="1">+ Nueva sección</button></div>
+  <p class="ayuda" style="margin:0 0 12px">El orden de esta lista es el orden del catálogo. Las secciones sin productos visibles no se muestran en la tienda. La sección «Ofertas» aparece sola cuando algún producto tiene precio en oferta.</p>
+  <div class="lista">${secciones.length ? secciones.map((x, i) => `<article class="item">
+    <div class="sec-emoji" aria-hidden="true">${esc(x.emoji || "🎁")}</div>
+    <div><h3>${esc(x.nombre)}</h3><div class="meta"><span>${n(x.id)} producto${n(x.id) === 1 ? "" : "s"}</span></div></div>
+    <div class="botones"><span class="flechas"><button class="btn ghost chico" data-sec-mover="${i}:-1" aria-label="Subir" ${i === 0 ? "disabled" : ""}>↑</button><button class="btn ghost chico" data-sec-mover="${i}:1" aria-label="Bajar" ${i === secciones.length - 1 ? "disabled" : ""}>↓</button></span><button class="btn chico" data-sec-editar="${esc(x.id)}">Editar</button></div>
+  </article>`).join("") : `<p class="vacio">Todavía no hay secciones.</p>`}</div>`;
+}
+async function moverSeccion(t){
+  const [i, d] = t.dataset.secMover.split(":").map(Number), j = i + d;
+  if (j < 0 || j >= secciones.length) return;
+  const nuevo = secciones.slice(); [nuevo[i], nuevo[j]] = [nuevo[j], nuevo[i]];
+  t.closest(".lista").querySelectorAll("button").forEach(b => b.disabled = true);
+  const cambios = nuevo.map((x, k) => ({x, orden: (k + 1) * 10})).filter(c => c.x.orden !== c.orden);
+  const res = await Promise.all(cambios.map(c => sb.from("secciones").update({orden: c.orden}).eq("id", c.x.id)));
+  const fallo = res.find(r => r.error);
+  if (fallo) alert("No se pudo cambiar el orden: " + fallo.error.message);
+  else { cambios.forEach(c => c.x.orden = c.orden); secciones = nuevo; usarSecciones(); }
+  pintarSecciones();
+}
+function avisoSec(txt, error){ const m = $("#secMsg"); m.textContent = txt; m.className = "msg" + (txt ? (error ? " err" : " ok") : ""); }
+function abrirSeccion(x){
+  secActual = x;
+  $("#secTitulo").textContent = x ? "Editar sección" : "Nueva sección";
+  $("#secNombre").value = x ? x.nombre : "";
+  $("#emoji").value = x ? x.emoji : "";
+  $("#secBorrar").classList.toggle("oculta", !x);
+  avisoSec(""); $("#dlgSec").showModal();
+}
+const aSlug = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "seccion";
+$("#secCancelar").onclick = () => $("#dlgSec").close();
+$("#formSec").onsubmit = async ev => {
+  ev.preventDefault();
+  const nombre = $("#secNombre").value.trim(), emoji = $("#emoji").value.trim() || "🎁";
+  if (!nombre) return avisoSec("Escribe el nombre de la sección.", true);
+  if (secciones.some(x => x !== secActual && x.nombre.toLowerCase() === nombre.toLowerCase())) return avisoSec("Ya existe una sección con ese nombre.", true);
+  const b = $("#secGuardar"); b.disabled = true; avisoSec("Guardando…");
+  let res;
+  if (secActual) res = await sb.from("secciones").update({nombre, emoji}).eq("id", secActual.id).select().single();
+  else {
+    const base = aSlug(nombre); let id = base, k = 2;
+    while (id === "ofertas" || secciones.some(x => x.id === id)) id = base + "-" + k++;
+    res = await sb.from("secciones").insert({id, nombre, emoji, orden: Math.max(0, ...secciones.map(x => x.orden)) + 10}).select().single();
+  }
+  b.disabled = false;
+  if (res.error) return avisoSec("No se pudo guardar: " + res.error.message, true);
+  if (secActual) Object.assign(secActual, res.data); else secciones.push(res.data);
+  usarSecciones(); $("#dlgSec").close(); pintarSecciones();
+};
+$("#secBorrar").onclick = async () => {
+  const x = secActual; if (!x) return;
+  const n = lista.filter(p => p.categoria === x.id).length;
+  if (n) return avisoSec(`Esta sección tiene ${n} producto${n === 1 ? "" : "s"}. Muévelos a otra sección o bórralos antes de borrarla.`, true);
+  if (!confirm("¿Borrar la sección «" + x.nombre + "»? Esto no se puede deshacer.")) return;
+  const { error } = await sb.from("secciones").delete().eq("id", x.id);
+  if (error) return avisoSec("No se pudo borrar: " + error.message, true);
+  secciones = secciones.filter(s => s !== x); usarSecciones(); $("#dlgSec").close(); pintarSecciones();
 };
 
 /* ===== Inicio ===== */

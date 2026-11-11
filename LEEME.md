@@ -19,13 +19,15 @@ Web de catálogo, carrito y pago, con pedido por WhatsApp y tasa euro del BCV qu
 ## Panel de administración (productos y fotos)
 - Está en `admin.html`. Ya publicada la web: `https://viphydetails.github.io/admin.html`. No aparece en la tienda.
 - Ahí se agregan, editan, ocultan y borran productos, y se suben sus fotos. Los cambios se ven al instante en la tienda.
-- Los datos viven en Supabase (proyecto «Viphy»). La conexión está en `compartido.js`, junto con las secciones del catálogo.
+- Los datos viven en Supabase (proyecto «Viphy»). La conexión está en `compartido.js` (también tiene unas secciones de respaldo por si Supabase no responde).
 - **Agregar un admin:** en Supabase → Authentication → Users → Add user → Create new user (correo y contraseña, marca Auto Confirm User). Luego en SQL Editor ejecuta:
   `insert into public.admins (email) values ('correo@ejemplo.com');`
 - **Quitar un admin:** `delete from public.admins where email = 'correo@ejemplo.com';`
 - **Ofertas:** en el producto escribe el «Precio en oferta». La tienda muestra «Antes» con el precio tachado, «Hoy» con el de oferta y la etiqueta OFERTA, y cobra el precio en oferta. Para quitarla, deja el campo vacío.
+- **Secciones:** en la pestaña «Secciones» del panel se crean, renombran, ordenan (↑ ↓) y borran. Una sección con productos no se puede borrar hasta mover o borrar sus productos. Las secciones vacías no aparecen en la tienda.
+- **Etiqueta OFERTA y sección Ofertas:** se ponen solas cuando un producto tiene «Precio en oferta». El editor te avisa el % de descuento.
 - **Varias fotos:** cada producto admite hasta 8. La primera es la principal; en la tienda se deslizan en carrusel y al tocarlas se ven en grande.
-- `supabase/esquema.sql` y luego `supabase/02-ofertas-y-galeria.sql` crean toda la base de datos. Ya se ejecutaron; solo hace falta de nuevo si creas otro proyecto.
+- `supabase/esquema.sql`, `02-ofertas-y-galeria.sql` y `03-secciones.sql` (en ese orden) crean toda la base de datos. Ya se ejecutaron; solo hace falta de nuevo si creas otro proyecto.
 - Si Supabase no responde, la tienda muestra la última lista de productos que vio el visitante, o la lista de respaldo de `index.html`.
 
 ## Si la tasa falla
