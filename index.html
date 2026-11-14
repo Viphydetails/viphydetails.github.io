@@ -450,7 +450,8 @@ function payView(){
   ${CONFIG.pagos[f.metodo].enBs && CONFIG.tasa ? `<div class="line total"><span>Monto en bolívares <span class="bs">(tasa euro ${tasaTxt()} · ${CONFIG.tasaFecha})</span></span><span>${bs(aPagar())}</span></div>` : ""}
   <div class="notice"><pre style="margin:0 0 10px;font:inherit;white-space:pre-wrap">${esc(CONFIG.pagos[f.metodo].datos)}</pre><button class="btn ghost" data-copiar="1">Copiar datos y monto</button></div>
   <label for="ref">Número de referencia o comprobante del pago${CONFIG.pagos[f.metodo].sinReferencia ? " (opcional: te pasamos los datos por WhatsApp)" : ""}</label><input type="text" id="ref" data-f="ref" value="${esc(f.ref)}">
-  <label for="nota">Personalización: nombres, frases, colores (las fotos las envías por WhatsApp)</label><textarea id="nota" data-f="nota" rows="2">${esc(f.nota)}</textarea></div>
+  <label for="nota">Personalización: nombres, frases, colores</label><textarea id="nota" data-f="nota" rows="2">${esc(f.nota)}</textarea>
+  <p class="bs" style="margin:6px 0 0">Nota: las fotos o cualquier información adicional puedes enviarlas por <a href="https://wa.me/${CONFIG.whatsapp}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">WhatsApp</a>.</p></div>
   <p class="err" id="err" role="alert"></p>
   <div class="row"><button class="btn ghost" data-go="cart">Volver al carrito</button><button class="btn" id="send">Enviar pedido por WhatsApp</button></div>`;
 }
