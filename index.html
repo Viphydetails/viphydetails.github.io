@@ -144,6 +144,24 @@ details[open] p{animation:vin .3s ease}
 @media (hover:hover){.foto-v:hover{transform:translateY(-4px) scale(1.04)}}
 @media (max-width:640px){.vitrina{margin:0 -14px 6px}.foto-v{width:132px;border-radius:18px}.cinta{gap:10px}}
 @media (prefers-reduced-motion:reduce){.vitrina{overflow-x:auto;-webkit-mask-image:none;mask-image:none}.cinta [data-copia]{display:none}}
+/* Buscador */
+.buscar{position:relative;margin:4px 0 6px}
+.buscar input{width:100%;padding:13px 44px 13px 44px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:1rem}
+.buscar input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.buscar::before{content:"";position:absolute;left:16px;top:50%;width:18px;height:18px;transform:translateY(-50%);background:var(--muted);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E") center/contain no-repeat}
+.buscar input::-webkit-search-cancel-button{display:none}
+.limpiar{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:0;background:var(--soft);color:var(--ink);font-size:1.1rem;cursor:pointer}
+.resultados{color:var(--muted);text-align:center;margin:18px 0 0}
+/* Filas de productos en carrusel */
+.fila-car{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 2px;padding:4px 2px 10px;margin:0 -2px;scrollbar-width:none;overscroll-behavior-x:contain}
+.fila-car::-webkit-scrollbar{display:none}
+.fila-car>.gift{flex:0 0 228px;scroll-snap-align:start}
+.fila-car>.gift p{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.fila-ctrl{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:4px}
+.fila-ctrl .fl{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);font-size:1.4rem;font-weight:800;cursor:pointer;line-height:1}
+.fila-ctrl .fl:disabled{opacity:.3;cursor:default}
+.fila-ctrl .ver{border:0;background:none;color:var(--accent);font-weight:700;cursor:pointer;padding:8px 10px;text-decoration:underline;text-underline-offset:3px}
+@media (max-width:640px){.fila-car{gap:10px}.fila-car>.gift{flex-basis:58%}.fila-ctrl .fl{display:none}}
 /* Ofertas y carrusel */
 .price .antes{display:block;font-size:.82rem;font-weight:400;color:var(--muted)}
 .price .antes s{text-decoration-thickness:2px}
@@ -227,7 +245,8 @@ const CONFIG = {
   tasa: 0,                    // se llena sola desde tasa.json (tasa euro del BCV)
   tasaFecha: "",
   pagos: {
-    bs: {nombre:"Bolívares", datos:"Pago móvil\nBanco: Bancamiga\nCédula: 30.127.286\nTeléfono: 0424-4093249"},
+    bs: {nombre:"Pago móvil (Bs.)", enBs:true, datos:"Pago móvil\nBanco: Bancamiga\nCédula: 30.127.286\nTeléfono: 0424-4093249"},
+    transferencia: {nombre:"Transferencia bancaria (Bs.)", enBs:true, datos:"Transferencia bancaria\nBanco: 0172 - Bancamiga\nTitular: DAVID ALEJANDRO LEAL COLMENARES\nCédula: V30127286\nCuenta Corriente Amiga: 01720201462015163922"},
     binance: {nombre:"Binance", datos:"Binance\nID: 419931137"},
     zinli: {nombre:"Zinli", datos:"Zinli\nCorreo: sophiaifloresg@gmail.com"},
     zelle: {nombre:"Zelle", datos:"Zelle\nCorreo: nelsonrodriguez01@gmail.com"},
@@ -259,7 +278,7 @@ let PRODUCTOS = [
 const FAQ = [
   ["¿Cómo hago mi pedido?","Selecciona el producto que más te guste, completa el formulario y nos llegará todo a nuestro WhatsApp. Si tienes dudas, también puedes consultarnos y te atenderemos apenas veamos tu mensaje."],
   ["¿Por qué debo abonar el 50 %?","La mayoría de nuestros productos (por no decir todos) son personalizados, así que para evitar inconvenientes siempre preferimos trabajar con el 50 % adelantado.<br><br><strong>Es importante que sepas que, una vez abonado, NO HACEMOS DEVOLUCIONES POR NINGÚN MOTIVO.</strong> Debes tener 100 % de seguridad al encargar."],
-  ["¿Qué métodos de pago aceptan?","El que se te haga más fácil: aceptamos bolívares, divisas en efectivo, Binance, Zinli, Zelle y PayPal."],
+  ["¿Qué métodos de pago aceptan?","El que se te haga más fácil: aceptamos bolívares (pago móvil y transferencia), divisas en efectivo, Binance, Zinli, Zelle y PayPal."],
   ["¿Hacen delivery?","Hacemos delivery a toda Valencia (con costo adicional dependiendo de la zona) y trabajamos con envíos nacionales."],
   ["¿Cuánto tarda un pedido personalizado?","Depende mucho de la complejidad y del producto. Usualmente el mínimo son 2 días de antelación."]
 ];
@@ -330,6 +349,42 @@ function seccionesVisibles(){
   const lista = CATS.map(c => ({...c, items: PRODUCTOS.filter(p => p.c === c.id)})).filter(c => c.items.length);
   return ofertas.length ? [{id:"ofertas", n:"Ofertas", e:"🏷️", items: ofertas}, ...lista] : lista;
 }
+// Buscador: sin acentos ni mayúsculas, busca en nombre, descripción y sección.
+let busqueda = "";
+const abiertas = new Set();   // secciones que el cliente abrió con «Ver todos»
+const norm = t => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+function zona(secs){
+  if (busqueda.trim()){
+    const pal = norm(busqueda).split(/\s+/).filter(Boolean);
+    const res = PRODUCTOS.filter(p => { const c = CATS.find(x => x.id === p.c); const t = norm(p.n + " " + p.d + " " + (c ? c.n : "")); return pal.every(w => t.includes(w)); });
+    const wa = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent("Hola, estoy buscando: " + busqueda.trim());
+    return res.length ? `<p class="resultados">${res.length} resultado${res.length === 1 ? "" : "s"} para «${esc(busqueda.trim())}»</p><div class="grid">${res.map(tarjeta).join("")}</div>`
+      : `<div class="empty"><p>No encontramos productos para «${esc(busqueda.trim())}».</p><a class="btn" href="${wa}" target="_blank" rel="noopener">Pregúntanos por WhatsApp</a></div>`;
+  }
+  return (secs || seccionesVisibles()).map(c => {
+    const car = c.items.length > 2 && !abiertas.has(c.id);
+    const ctrl = c.items.length > 2 ? `<div class="fila-ctrl">${car ? `<button class="fl" data-fl="${esc(c.id)}:-1" aria-label="Anteriores">‹</button>` : ""}<button class="ver" data-ver-todos="${esc(c.id)}">${car ? "Ver todos (" + c.items.length + ")" : "Ver menos"}</button>${car ? `<button class="fl" data-fl="${esc(c.id)}:1" aria-label="Siguientes">›</button>` : ""}</div>` : "";
+    return `<section id="sec-${esc(c.id)}" class="sec"><h2 class="t">${esc(c.e)} ${esc(c.n)}</h2><div class="${car ? "fila-car" : "grid"}" ${car ? `data-fila="${esc(c.id)}"` : ""}>${c.items.map(tarjeta).join("")}</div>${ctrl}</section>`;
+  }).join("");
+}
+function pintarZona(){
+  const z = $("#zona"); if (!z) return;
+  z.innerHTML = zona();
+  z.querySelectorAll(".gift,h2.t").forEach(el => el.classList.add("rv", "in", "sin"));
+  const l = $(".buscar .limpiar");
+  if (busqueda && !l) $(".buscar").insertAdjacentHTML("beforeend", '<button class="limpiar" id="limpiar" aria-label="Borrar búsqueda">×</button>');
+  if (!busqueda && l) l.remove();
+  flechasFilas();
+}
+// Activa o apaga las flechas según la posición de cada fila.
+function flechasFilas(){
+  document.querySelectorAll("[data-fila]").forEach(f => {
+    const sec = f.closest(".sec"), max = f.scrollWidth - f.clientWidth - 4;
+    const a = sec.querySelector('[data-fl$=":-1"]'), b = sec.querySelector('[data-fl$=":1"]');
+    if (a) a.disabled = f.scrollLeft <= 4;
+    if (b) b.disabled = f.scrollLeft >= max;
+  });
+}
 function catalog(){
   const secs = seccionesVisibles();
   const foto = CONFIG.fotoPortada ? `<img src="${esc(CONFIG.fotoPortada)}" alt="${esc(CONFIG.tienda)}">` : `<span class="iso" aria-hidden="true"></span>`;
@@ -338,7 +393,8 @@ function catalog(){
   return `<section class="hero"><div><p class="kick">Regalos personalizados</p><h1>${esc(CONFIG.tienda)}</h1><p class="sub">${esc(CONFIG.resena)}</p><button class="btn" data-sec="${secs[0] ? secs[0].id : ""}">Ver catálogo</button></div><div class="portada">${foto}</div></section>
   ${vitrina()}
   <nav class="chips" aria-label="Secciones del catálogo">${secs.map(c => `<button class="chip" data-sec="${esc(c.id)}">${esc(c.e)} ${esc(c.n)}</button>`).join("")}</nav>
-  ${secs.map(c => `<section id="sec-${esc(c.id)}" class="sec"><h2 class="t">${esc(c.n)}</h2><div class="grid">${c.items.map(tarjeta).join("")}</div></section>`).join("")}
+  <div class="buscar" role="search"><input type="search" id="q" value="${esc(busqueda)}" placeholder="Buscar productos…" aria-label="Buscar productos" autocomplete="off" enterkeyhint="search">${busqueda ? '<button class="limpiar" id="limpiar" aria-label="Borrar búsqueda">×</button>' : ""}</div>
+  <div id="zona">${zona(secs)}</div>
   <section class="sec"><h2 class="t">Preguntas frecuentes</h2>${FAQ.map(q => `<details class="faq"><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join("")}</section>
   <section class="sec contacto"><h2 class="t">Contacto y ubicación</h2><div class="box">
   <div class="line"><span>WhatsApp</span><a href="${wa}" target="_blank" rel="noopener">+${esc(CONFIG.whatsapp)}</a></div>
@@ -390,8 +446,8 @@ function payView(){
   <p class="notice">Recuerda: para agendar tu pedido debes abonar el 50 % del monto inicial.</p>
   <label>Método de pago</label><div class="opts">${Object.entries(CONFIG.pagos).map(([k, v]) => opt("metodo", k, v.nombre)).join("")}</div>
   <div class="line total"><span>A pagar ahora</span><span>${usd(aPagar())}</span></div>
-  ${f.metodo==="bs" && !CONFIG.tasa ? `<p class="notice">La tasa del día no está disponible ahora. Escríbenos por WhatsApp para confirmar el monto en bolívares.</p>` : ""}
-  ${f.metodo==="bs" && CONFIG.tasa ? `<div class="line total"><span>Monto en bolívares <span class="bs">(tasa euro ${tasaTxt()} · ${CONFIG.tasaFecha})</span></span><span>${bs(aPagar())}</span></div>` : ""}
+  ${CONFIG.pagos[f.metodo].enBs && !CONFIG.tasa ? `<p class="notice">La tasa del día no está disponible ahora. Escríbenos por WhatsApp para confirmar el monto en bolívares.</p>` : ""}
+  ${CONFIG.pagos[f.metodo].enBs && CONFIG.tasa ? `<div class="line total"><span>Monto en bolívares <span class="bs">(tasa euro ${tasaTxt()} · ${CONFIG.tasaFecha})</span></span><span>${bs(aPagar())}</span></div>` : ""}
   <div class="notice"><pre style="margin:0 0 10px;font:inherit;white-space:pre-wrap">${esc(CONFIG.pagos[f.metodo].datos)}</pre><button class="btn ghost" data-copiar="1">Copiar datos y monto</button></div>
   <label for="ref">Número de referencia o comprobante del pago${CONFIG.pagos[f.metodo].sinReferencia ? " (opcional: te pasamos los datos por WhatsApp)" : ""}</label><input type="text" id="ref" data-f="ref" value="${esc(f.ref)}">
   <label for="nota">Personalización: nombres, frases, colores (las fotos las envías por WhatsApp)</label><textarea id="nota" data-f="nota" rows="2">${esc(f.nota)}</textarea></div>
@@ -407,7 +463,7 @@ function mensaje(numero){
     `*Entrega:* ${f.entrega==="delivery" ? "Delivery — " + f.dir : "Pick-up"}`,
     `*Fecha y hora:* ${f.fecha} ${f.hora}`,
     `*Pago:* ${MET[f.metodo]} · ${f.modo==="mitad" ? "Abono del 50 %" : "De contado"}`,
-    `*Monto abonado:* ${usd(aPagar())}${f.metodo==="bs" && CONFIG.tasa ? " (" + bs(aPagar()) + " a tasa euro " + tasaTxt() + ")" : ""}`,
+    `*Monto abonado:* ${usd(aPagar())}${CONFIG.pagos[f.metodo].enBs && CONFIG.tasa ? " (" + bs(aPagar()) + " a tasa euro " + tasaTxt() + ")" : ""}`,
     `*Referencia:* ${f.ref.trim() || "por enviar"}`);
   if (f.nota) L.push(`*Notas:* ${f.nota}`);
   return L.join("\n");
@@ -433,7 +489,7 @@ async function registrarPedido(){
   try{
     const r = await fetch(SUPABASE.url + "/rest/v1/rpc/crear_pedido", {method:"POST", headers:{apikey: SUPABASE.key, "Content-Type":"application/json"},
       body: JSON.stringify({p:{cliente:f.nombre, telefono:f.tel, entrega:f.entrega, direccion: f.entrega === "delivery" ? f.dir : "", fecha:f.fecha, hora:f.hora,
-        metodo: MET[f.metodo], modo:f.modo, tasa: f.metodo === "bs" && CONFIG.tasa ? CONFIG.tasa : null, referencia:f.ref, nota:f.nota,
+        metodo: MET[f.metodo], modo:f.modo, tasa: CONFIG.pagos[f.metodo].enBs && CONFIG.tasa ? CONFIG.tasa : null, referencia:f.ref, nota:f.nota,
         items: items().map(i => ({id:i.id, q:i.q}))}})});
     if (!r.ok) throw new Error(await r.text());
     return await r.json();
@@ -449,6 +505,7 @@ function done(){
 let animar = true;
 const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } }), {threshold:.12}) : null;
 function render(){
+  const pos = {}; document.querySelectorAll("[data-fila]").forEach(e => pos[e.dataset.fila] = e.scrollLeft);
   $("#app").innerHTML = view==="cat" ? catalog() : view==="cart" ? cartView() : view==="pay" ? payView() : done();
   $("#cartBtn").textContent = "Carrito (" + count() + ")";
   $("#rate").textContent = "";
@@ -459,6 +516,8 @@ function render(){
     if (animar && io) io.observe(el); else el.classList.add("in", "sin");
   });
   animar = false;
+  document.querySelectorAll("[data-fila]").forEach(e => { if (pos[e.dataset.fila]) e.scrollLeft = pos[e.dataset.fila]; });
+  flechasFilas();
 }
 
 function copiar(txt, b){
@@ -467,7 +526,10 @@ function copiar(txt, b){
   try { navigator.clipboard.writeText(txt).then(ok, fb); } catch (e) { fb(); }
 }
 document.addEventListener("click", ev => {
-  const t = ev.target.closest("[data-a],[data-go],[data-sec],[data-copiar],[data-foto],[data-punto],#send,#nuevo,#home,#cartBtn"); if (!t) return;
+  const t = ev.target.closest("[data-a],[data-go],[data-sec],[data-copiar],[data-foto],[data-punto],[data-fl],[data-ver-todos],#limpiar,#send,#nuevo,#home,#cartBtn"); if (!t) return;
+  if (t.id === "limpiar"){ busqueda = ""; $("#q").value = ""; pintarZona(); $("#q").focus(); return; }
+  if (t.dataset.fl){ const [id, d] = t.dataset.fl.split(":"); const fila = document.querySelector(`[data-fila="${CSS.escape(id)}"]`); if (fila){ const ini = fila.scrollLeft, paso = d * fila.clientWidth * 0.9; fila.scrollBy({left: paso, behavior: "smooth"}); setTimeout(() => { if (fila.scrollLeft === ini) fila.scrollLeft = ini + paso; flechasFilas(); }, 450); } return; }
+  if (t.dataset.verTodos){ const id = t.dataset.verTodos; abiertas.has(id) ? abiertas.delete(id) : abiertas.add(id); pintarZona(); if (!abiertas.has(id)) document.getElementById("sec-" + id).scrollIntoView({block: "nearest"}); return; }
   if (t.closest("#visor")) return;
   if (t.dataset.foto){ const [id, i] = t.dataset.foto.split(":"); abrirVisor(PRODUCTOS.find(p => p.id == id), +i); }
   else if (t.dataset.punto){ const car = t.closest(".gift").querySelector(".car"); car.scrollTo({left: car.clientWidth * t.dataset.punto, behavior: "smooth"}); }
@@ -477,10 +539,15 @@ document.addEventListener("click", ev => {
   else if (t.id==="nuevo"){ cart = {}; save(); f.ref = ""; go("cat"); }
   else if (t.id==="home") go("cat");
   else if (t.id==="cartBtn") go("cart");
-  else if (t.dataset.sec) document.getElementById("sec-" + t.dataset.sec).scrollIntoView({behavior:"smooth"});
-  else if (t.dataset.copiar) copiar(CONFIG.pagos[f.metodo].datos + "\nMonto: " + (f.metodo==="bs" && CONFIG.tasa ? bs(aPagar()) : usd(aPagar())), t);
+  else if (t.dataset.sec){ if (busqueda){ busqueda = ""; $("#q").value = ""; pintarZona(); } const el = document.getElementById("sec-" + t.dataset.sec); if (el) el.scrollIntoView({behavior:"smooth"}); }
+  else if (t.dataset.copiar) copiar(CONFIG.pagos[f.metodo].datos + "\nMonto: " + (CONFIG.pagos[f.metodo].enBs && CONFIG.tasa ? bs(aPagar()) : usd(aPagar())), t);
 });
-document.addEventListener("input", ev => { const k = ev.target.dataset.f; if (k) f[k] = ev.target.value; });
+document.addEventListener("input", ev => {
+  if (ev.target.id === "q"){ busqueda = ev.target.value; pintarZona(); return; }
+  const k = ev.target.dataset.f; if (k) f[k] = ev.target.value;
+});
+document.addEventListener("scroll", ev => { if (ev.target.dataset && ev.target.dataset.fila) flechasFilas(); }, true);
+window.addEventListener("resize", flechasFilas);
 document.addEventListener("change", ev => {
   const n = ev.target.name;
   if (ev.target.type==="radio" && n in f){ f[n] = ev.target.value; render(); }

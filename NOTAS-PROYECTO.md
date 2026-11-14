@@ -27,7 +27,7 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 ## Decisiones tomadas
 - Marca: color principal #4f000b, secundario #ffd6e0. Títulos en Lobster; texto en Agrandir, con Bricolage Grotesque de respaldo mientras no estén los archivos.
 - El catálogo muestra solo precios en USD. El monto en bolívares aparece solo al elegir pagar en bolívares, a tasa euro.
-- Pago: abono del 50 % (sin él no se agenda el pedido) o de contado. Métodos en la web: bolívares (pago móvil), Binance, Zinli, Zelle (nelsonrodriguez01@gmail.com) y PayPal (consultar datos por WhatsApp; la referencia es opcional). El efectivo se aceptó en las preguntas frecuentes pero no está como opción en el pago.
+- Pago: abono del 50 % (sin él no se agenda el pedido) o de contado. Métodos en la web: pago móvil (Bs.), transferencia bancaria Bancamiga (Bs.), Binance, Zinli, Zelle (nelsonrodriguez01@gmail.com) y PayPal (consultar datos por WhatsApp; la referencia es opcional). El efectivo se aceptó en las preguntas frecuentes pero no está como opción en el pago.
 - Los productos con `p:null` muestran «Precio por confirmar» y un botón «Consultar precio» por WhatsApp. Al poner el precio en USD pasan a tener botón «Agregar».
 - Se creó la sección Llaveros. Los tres marcos con foto quedaron en Portarretratos.
 - Animaciones sutiles al aparecer, al pasar el mouse y al agregar al carrito; se desactivan si el dispositivo pide menos movimiento.
@@ -40,6 +40,9 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 - Secciones administrables desde el panel. En la tienda solo se ven las que tienen productos visibles, y «Ofertas» aparece primero, sola, cuando hay productos con precio en oferta.
 - Pedidos: se registran al presionar «Enviar pedido por WhatsApp». Si Supabase falla, el pedido igual se envía por WhatsApp, sin número. Estados: pendiente, en espera, por hacer, en proceso, listo para entregar, entregado, cancelado.
 - Fundación: noviembre de 2020.
+- Catálogo: cada sección con más de 2 productos se ve como fila deslizable (carrusel) con flechas en computadora y botón «Ver todos (N)» que la abre en cuadrícula. Las descripciones largas se cortan a 4 líneas en el carrusel.
+- Buscador encima del catálogo: busca sin importar acentos ni mayúsculas en nombre, descripción y sección; si no hay resultados ofrece preguntar por WhatsApp.
+- Pago móvil y transferencia se cobran en bolívares a tasa euro.
 
 ## Pendiente
 - Crear las cuentas de los admins y agregarlas a la tabla `admins`.
