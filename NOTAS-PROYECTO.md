@@ -45,7 +45,7 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 - Pago móvil y transferencia se cobran en bolívares a tasa euro.
 - «Clientes que creyeron en nosotros»: sección justo debajo del buscador (se oculta mientras alguien busca), con fotos de clientes en `imagenes/clientes/`. Se cambian editando la lista `CLIENTES` en `index.html` (arriba, junto a `FAQ`).
 - Sin emojis en la tienda ni en el panel (decisión de la dueña). Los productos sin foto muestran el isotipo de Viphy.
-- «¿Cómo encargar?»: 3 pasos con número e ícono, entre «Clientes que creyeron en nosotros» y el catálogo; se oculta mientras alguien busca. Los textos están en la lista `PASOS` de `index.html`.
+- «¿Cómo encargar?»: 3 pasos con número e ícono, entre la primera y la segunda fila de productos; no aparece mientras alguien busca. Los textos están en la lista `PASOS` de `index.html`.
 
 ## Pendiente
 - Crear las cuentas de los admins y agregarlas a la tabla `admins`.
