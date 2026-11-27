@@ -162,6 +162,25 @@ details[open] p{animation:vin .3s ease}
 .cli:nth-child(5n+2),.cli:nth-child(5n+4){grid-row:span 3}
 .cli:nth-child(5n+3),.cli:nth-child(5n+5){grid-row:span 2}
 }
+/* Cómo encargar */
+.pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;position:relative;counter-reset:paso}
+.pasos::before{content:"";position:absolute;top:44px;left:16%;right:16%;border-top:2px dashed var(--line);z-index:0}
+.paso{position:relative;z-index:1;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px 18px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.paso .num{width:62px;height:62px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:400 1.9rem/1 Lobster,Georgia,cursive;box-shadow:0 0 0 6px var(--bg);margin-top:-8px}
+.paso svg{width:34px;height:34px;color:var(--accent);margin-top:6px}
+.paso h3{margin:2px 0 0;font-size:1.05rem;line-height:1.3}
+.paso p{margin:0;color:var(--muted);font-size:.9rem}
+.pasos-cta{display:flex;justify-content:center;margin-top:18px}
+@media (hover:hover){.paso{transition:transform .3s cubic-bezier(.2,.7,.2,1)}.paso:hover{transform:translateY(-5px)}}
+@media (max-width:640px){
+.pasos{grid-template-columns:1fr;gap:12px}
+.pasos::before{top:30px;bottom:30px;left:44px;right:auto;border-top:0;border-left:2px dashed var(--line)}
+.paso{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"num tit" "num txt";text-align:left;column-gap:16px;row-gap:2px;padding:16px;align-items:center}
+.paso .num{grid-area:num;width:56px;height:56px;font-size:1.7rem;margin:0;align-self:center}
+.paso svg{display:none}
+.paso h3{grid-area:tit;align-self:end}
+.paso p{grid-area:txt;align-self:start}
+}
 /* Buscador */
 .buscar{position:relative;margin:4px 0 6px}
 .buscar input{width:100%;padding:13px 44px 13px 44px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:1rem}
@@ -390,6 +409,7 @@ function zona(secs){
 function pintarZona(){
   const z = $("#zona"); if (!z) return;
   const cl = $("#sec-clientes"); if (cl) cl.hidden = !!busqueda;
+  const ps = $("#sec-pasos"); if (ps) ps.hidden = !!busqueda;
   z.innerHTML = zona();
   z.querySelectorAll(".gift,h2.t").forEach(el => el.classList.add("rv", "in", "sin"));
   const l = $(".buscar .limpiar");
@@ -406,6 +426,20 @@ function flechasFilas(){
     if (b) b.disabled = f.scrollLeft >= max;
   });
 }
+// Pasos de «¿Cómo encargar?»
+const PASOS = [
+  ["Elige el producto que te gusta", "Explora el catálogo o usa el buscador para encontrar tu regalo ideal.",
+   '<path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>'],
+  ["Llévalo al carrito y llena todo el formulario", "Agrega tus productos, escribe tus datos, la fecha de entrega y los datos del pago.",
+   '<path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2"/><circle cx="9" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/>'],
+  ["Contáctanos por WhatsApp y coordina tu entrega", "Tu pedido nos llega con su número y coordinamos juntos la entrega.",
+   '<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19l-4 1Z"/><path d="M9.5 9.5c.3 2 1.9 3.7 4 4l1-1 1.7.8c-.2 1-1 1.7-2 1.7-3 0-5.7-2.7-5.7-5.7 0-1 .7-1.8 1.7-2l.8 1.7-1.5.5Z"/>']
+];
+function comoEncargar(primera){
+  return `<section class="sec" id="sec-pasos"${busqueda ? " hidden" : ""}><h2 class="t">¿Cómo encargar?</h2><p class="sec-sub">Así de fácil es hacer tu pedido</p>
+  <div class="pasos">${PASOS.map((x, i) => `<div class="paso"><span class="num">${i + 1}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${x[2]}</svg><h3>${x[0]}</h3><p>${x[1]}</p></div>`).join("")}</div>
+  ${primera ? `<div class="pasos-cta"><button class="btn" data-sec="${esc(primera)}">Empezar a elegir</button></div>` : ""}</section>`;
+}
 function catalog(){
   const secs = seccionesVisibles();
   const foto = CONFIG.fotoPortada ? `<img src="${esc(CONFIG.fotoPortada)}" alt="${esc(CONFIG.tienda)}">` : `<span class="iso" aria-hidden="true"></span>`;
@@ -417,6 +451,7 @@ function catalog(){
   <div class="buscar" role="search"><input type="search" id="q" value="${esc(busqueda)}" placeholder="Buscar productos…" aria-label="Buscar productos" autocomplete="off" enterkeyhint="search">${busqueda ? '<button class="limpiar" id="limpiar" aria-label="Borrar búsqueda">×</button>' : ""}</div>
   ${CLIENTES.length ? `<section class="sec" id="sec-clientes"${busqueda ? " hidden" : ""}><h2 class="t">Clientes que creyeron en nosotros</h2><p class="sec-sub">Gracias por dejarnos ser parte de sus momentos especiales.</p>
   <div class="clientes">${CLIENTES.map((u, i) => `<button class="cli" data-cliente="${i}" aria-label="Ver foto ${i + 1} de nuestros clientes"><img src="${esc(u)}" alt="Cliente de Viphy con su regalo" loading="lazy"></button>`).join("")}</div></section>` : ""}
+  ${comoEncargar(secs[0] && secs[0].id)}
   <div id="zona">${zona(secs)}</div>
   <section class="sec"><h2 class="t">Preguntas frecuentes</h2>${FAQ.map(q => `<details class="faq"><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join("")}</section>
   <section class="sec contacto"><h2 class="t">Contacto y ubicación</h2><div class="box">
@@ -535,7 +570,7 @@ function render(){
   $("#rate").textContent = "";
   const app = $("#app");
   if (animar){ app.classList.remove("fade"); void app.offsetWidth; app.classList.add("fade"); }
-  app.querySelectorAll(".gift,h2.t,.faq,.contacto .box,.chips").forEach(el => {
+  app.querySelectorAll(".gift,h2.t,.faq,.contacto .box,.chips,.paso").forEach(el => {
     el.classList.add("rv");
     if (animar && io) io.observe(el); else el.classList.add("in", "sin");
   });
