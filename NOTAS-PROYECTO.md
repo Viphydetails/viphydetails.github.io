@@ -43,6 +43,7 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 - Catálogo: cada sección con más de 2 productos se ve como fila deslizable (carrusel) con flechas en computadora y botón «Ver todos (N)» que la abre en cuadrícula. Las descripciones largas se cortan a 4 líneas en el carrusel.
 - Buscador encima del catálogo: busca sin importar acentos ni mayúsculas en nombre, descripción y sección; si no hay resultados ofrece preguntar por WhatsApp.
 - Pago móvil y transferencia se cobran en bolívares a tasa euro.
+- «Clientes que creyeron en nosotros»: sección justo después de la descripción, con fotos de clientes en `imagenes/clientes/`. Se cambian editando la lista `CLIENTES` en `index.html` (arriba, junto a `FAQ`).
 
 ## Pendiente
 - Crear las cuentas de los admins y agregarlas a la tabla `admins`.
@@ -53,7 +54,7 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 - Archivos de la tipografía Agrandir.
 - Confirmar que el correo es viphy.details@gmail.com.
 - Decidir si se agrega la opción de efectivo en el pago y una línea de «no hay devoluciones» junto al aviso del 50 %.
-- Confirmar que los clientes de las fotos dieron permiso para mostrarlas.
+- Confirmar que los clientes de las fotos (productos y «Clientes que creyeron en nosotros») dieron permiso para mostrarlas.
 - Probar un pedido real desde el teléfono.
 
 ## Cómo agregar un producto
