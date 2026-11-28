@@ -46,6 +46,7 @@ Tienda virtual de regalos personalizados. Web de una sola página (`index.html`)
 - «Clientes que creyeron en nosotros»: sección justo debajo del buscador (se oculta mientras alguien busca), con fotos de clientes en `imagenes/clientes/`. Se cambian editando la lista `CLIENTES` en `index.html` (arriba, junto a `FAQ`).
 - Sin emojis en la tienda ni en el panel (decisión de la dueña). Los productos sin foto muestran el isotipo de Viphy.
 - «¿Cómo encargar?»: 3 pasos con número e ícono, entre la primera y la segunda fila de productos; no aparece mientras alguien busca. Los textos están en la lista `PASOS` de `index.html`.
+- Animaciones dinámicas (bloque «Animaciones dinámicas» en los estilos): título de portada letra por letra, corazones del isotipo flotando, círculo de portada que entra girando, líneas bajo los títulos, círculos de productos que rebotan, fotos de clientes que se descubren como cortina, números de los pasos que aparecen y se mecen, OFERTA que late, destello en botones y barra de avance bajo el encabezado. La portada no se vuelve a dibujar al agregar al carrito. Todo se apaga si el dispositivo pide reducir movimiento.
 
 ## Pendiente
 - Crear las cuentas de los admins y agregarlas a la tabla `admins`.
